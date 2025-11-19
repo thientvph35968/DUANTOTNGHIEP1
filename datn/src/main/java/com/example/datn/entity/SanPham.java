@@ -1,9 +1,16 @@
 package com.example.datn.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Entity
 @Table(name = "SanPham")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SanPham {
 
     @Id
@@ -17,25 +24,19 @@ public class SanPham {
     @Column(name = "TenSanPham")
     private String tenSanPham;
 
-    @Column(name = "MoTa")
+    @Column(name = "MoTa", columnDefinition = "NVARCHAR(MAX)")
     private String moTa;
+
+    @Column(name = "HinhAnh")
+    private String hinhAnh;
 
     @Column(name = "TrangThai")
     private Boolean trangThai;
 
-    // Getters & Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ID_ThuongHieu")
+    private ThuongHieu thuongHieu;
 
-    public String getMaSanPham() { return maSanPham; }
-    public void setMaSanPham(String maSanPham) { this.maSanPham = maSanPham; }
-
-    public String getTenSanPham() { return tenSanPham; }
-    public void setTenSanPham(String tenSanPham) { this.tenSanPham = tenSanPham; }
-
-    public String getMoTa() { return moTa; }
-    public void setMoTa(String moTa) { this.moTa = moTa; }
-
-    public Boolean getTrangThai() { return trangThai; }
-    public void setTrangThai(Boolean trangThai) { this.trangThai = trangThai; }
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
+    private List<SanPhamChiTiet> chiTietList;
 }

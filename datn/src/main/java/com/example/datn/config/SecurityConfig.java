@@ -24,15 +24,35 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/dangky", "/dangki", "/css/**", "/js/**", "/images/**", "/*.jpg", "/*.png").permitAll()
-                        .requestMatchers("/admin/**", "/khachhang/**", "/quanlynguoidung", "/quanlysanpham", "/quanlyhoadon", "/quanlydanhmuc", "/quanlythuonghieu", "/quanlybanhang", "/quanlymagiam").hasRole("ADMIN")
+                        // Cho phép truy cập public
+                        .requestMatchers(
+                                "/", "/home",
+                                "/login", "/dangky", "/dangki",
+                                "/product/**",
+                                "/collections/**",
+                                "/api/cart/**",
+                                "/css/**", "/js/**", "/**",
+                                "/*.jpg", "/*.png", "/*.gif"
+                        ).permitAll()
+                        // Chỉ ADMIN mới truy cập được
+                        .requestMatchers(
+                                "/admin/**",
+                                "/quanlynguoidung",
+                                "/quanlysanpham",
+                                "/quanlyhoadon",
+                                "/quanlydanhmuc",
+                                "/quanlythuonghieu",
+                                "/quanlybanhang",
+                                "/quanlymagiam"
+                        ).hasRole("ADMIN")
+                        // Các request khác phải đăng nhập
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .usernameParameter("taiKhoan")  // ✅ Khớp với name trong HTML
-                        .passwordParameter("matKhau")   // ✅ Khớp với name trong HTML
+                        .usernameParameter("taiKhoan")
+                        .passwordParameter("matKhau")
                         .successHandler(customSuccessHandler)
                         .failureUrl("/login?error")
                         .permitAll()
@@ -49,14 +69,14 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance(); // ✅ Plain text password
+        return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(customUserDetailsService);
-        provider.setPasswordEncoder(passwordEncoder()); // ✅ Dùng NoOpPasswordEncoder
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 }

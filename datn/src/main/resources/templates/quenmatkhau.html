@@ -1,153 +1,196 @@
-<!DOCTYPE html>
-<html lang="vi">
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Khôi phục mật khẩu</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quên mật khẩu</title>
   <style>
-    /* Thiết lập cơ bản */
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f8f8f8; /* Màu nền nhẹ cho toàn trang */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --accent: #3b82f6;
+      --muted: #6b7280;
+      --radius: 12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-
-    /* Container chính của form */
-    .password-recovery-container {
-      max-width: 400px;
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, var(--bg), #eef4ff);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .card {
       width: 100%;
-      padding: 30px;
-      background-color: #fff;
-      /* Dùng box-shadow nếu muốn tạo cảm giác nổi lên, như form đăng nhập/khôi phục thường thấy */
-      /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+      max-width: 450px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 30px rgba(18, 38, 63, 0.1);
+      padding: 32px;
       text-align: center;
     }
-
-    /* Tiêu đề chính */
-    .title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 5px;
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
     }
-
-    /* Phụ đề/hướng dẫn */
+    .logo-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e2e8f0;
+      padding: 5px;
+    }
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #12263f;
+      margin-bottom: 8px;
+    }
     .subtitle {
-      font-size: 16px;
-      color: #555;
+      color: var(--muted);
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .form-group {
+      text-align: left;
       margin-bottom: 20px;
     }
-
-    /* Nhóm input */
-    .input-group {
-      margin-bottom: 15px;
-      text-align: left;
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #12263f;
+      margin-bottom: 6px;
     }
-
-    /* Input (Ô nhập Email) */
     input[type="email"] {
       width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #ccc;
-      border-radius: 0; /* Bo góc bằng 0 để trông hiện đại hơn */
-      font-size: 16px;
-      box-sizing: border-box; /* Quan trọng để padding không làm tăng chiều rộng */
-      /* Màu nền nhạt nếu cần */
-      /* background-color: #f9f9f9; */
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-
-    input[type="email"]:focus {
-      border-color: #666; /* Đổi màu viền khi focus */
+    input:focus {
+      border-color: var(--accent);
       outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
-
-    /* Thông báo reCAPTCHA */
-    .recaptcha-notice {
-      font-size: 13px;
-      color: #777;
-      text-align: left;
-      margin-top: 10px;
-      margin-bottom: 25px;
-      line-height: 1.4;
-    }
-
-    .recaptcha-notice a {
-      color: #007bff; /* Màu xanh nổi bật cho link */
-      text-decoration: none;
-    }
-
-    .recaptcha-notice a:hover {
-      text-decoration: underline;
-    }
-
-    /* Nút Khôi phục */
-    .recover-button {
+    button[type="submit"] {
       width: 100%;
-      padding: 15px;
-      background-color: #c9c9c9; /* Màu xám nhạt như trong ảnh */
-      color: #fff;
-      font-size: 18px;
-      font-weight: 500;
+      padding: 12px;
+      background-color: var(--accent);
+      color: var(--card);
+      font-weight: 600;
       border: none;
-      border-radius: 0;
+      border-radius: 8px;
       cursor: pointer;
-      text-transform: uppercase;
-      transition: background-color 0.3s;
+      font-size: 1rem;
+      margin-top: 15px;
+      transition: background-color 0.3s, transform 0.1s;
     }
-
-    .recover-button:hover {
-      background-color: #b0b0b0; /* Đậm hơn khi hover */
+    button[type="submit"]:hover {
+      background-color: #2563eb;
     }
-
-    /* Link quay lại đăng nhập */
-    .login-link-container {
-      margin-top: 25px;
-      font-size: 15px;
-      color: #555;
+    button[type="submit"]:active {
+      transform: scale(0.99);
     }
-
-    .login-link {
-      color: #ff3333; /* Màu đỏ nổi bật như trong ảnh */
-      text-decoration: none;
+    .error-message {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      display: block;
       font-weight: 500;
+      background: #fee2e2;
+      padding: 12px;
+      border-radius: 8px;
     }
-
-    .login-link:hover {
-      text-decoration: underline;
+    .success-message {
+      color: #16a34a;
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      display: block;
+      font-weight: 500;
+      background: #d1fae5;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .meta {
+      margin-top: 25px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .meta a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .required {
+      color: #dc2626;
+    }
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      text-align: left;
+      font-size: 0.875rem;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #1e3a8a;
     }
   </style>
 </head>
 <body>
-<div class="password-recovery-container">
-  <h1 class="title">KHÔI PHỤC MẬT KHẨU</h1>
-  <p class="subtitle">Nhập email của bạn:</p>
 
-  <form>
-    <div class="input-group">
-      <input type="email" id="email" name="email" placeholder="Email" required>
+<div class="card">
+  <div class="logo-container">
+    <img th:src="@{/PL.jpg}" alt="Logo" class="logo-img">
+  </div>
+
+  <h2>Quên mật khẩu</h2>
+  <p class="subtitle">Đặt lại mật khẩu của bạn 🔐</p>
+
+  <div class="info-box">
+    <strong>📧 Cách thức hoạt động:</strong>
+    • Nhập email đã đăng ký<br>
+    • Hệ thống sẽ tạo mật khẩu mới (6 số ngẫu nhiên)<br>
+    • Mật khẩu sẽ được gửi về email của bạn<br>
+    • Đăng nhập bằng mật khẩu mới
+  </div>
+
+  <!-- Hiển thị thông báo -->
+  <p th:if="${error}" class="error-message" th:text="${error}"></p>
+  <p th:if="${success}" class="success-message" th:text="${success}"></p>
+
+  <!-- Form quên mật khẩu -->
+  <form th:action="@{/quenmatkhau}" method="post">
+
+    <div class="form-group">
+      <label for="email">Email đã đăng ký <span class="required">*</span></label>
+      <input type="email" id="email" name="email"
+             placeholder="email@example.com"
+             autocomplete="email"
+             required>
     </div>
 
-    <p class="recaptcha-notice">
-      This site is protected by reCAPTCHA and the Google
-      <a href="#" target="_blank">Privacy Policy</a> and
-      <a href="#" target="_blank">Terms of Service</a> apply.
-    </p>
-
-    <button type="submit" class="recover-button">KHÔI PHỤC</button>
+    <button type="submit">Gửi mật khẩu mới</button>
   </form>
 
-  <p class="login-link-container">
-    Bạn đã nhớ mật khẩu?
-    <a href="/login" class="login-link">Trở về đăng nhập</a>
+  <p class="meta">
+    <a th:href="@{/login}">← Quay lại đăng nhập</a>
   </p>
 </div>
+
 </body>
 </html>

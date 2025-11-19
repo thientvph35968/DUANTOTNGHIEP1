@@ -19,8 +19,12 @@ public class DangKyService {
     @Autowired
     private VaiTroRepository vaiTroRepository;
 
+    /**
+     * Xử lý đăng ký tài khoản mới cho người dùng (vai trò USER mặc định)
+     */
     public String dangKy(DangKyRequest request) {
-        // Validate
+
+        // ✅ Kiểm tra dữ liệu đầu vào
         if (request.getTaiKhoan() == null || request.getTaiKhoan().trim().isEmpty()) {
             return "Tài khoản không được để trống";
         }
@@ -33,36 +37,41 @@ public class DangKyService {
             return "Mật khẩu xác nhận không khớp";
         }
 
-        // Kiểm tra tài khoản đã tồn tại
+        // ✅ Kiểm tra tài khoản đã tồn tại chưa
         Optional<NhanVien> existingNV = nhanVienRepository.findByTaiKhoan(request.getTaiKhoan());
         if (existingNV.isPresent()) {
             return "Tài khoản đã tồn tại";
         }
 
-        // Tạo mã nhân viên tự động
+        // ✅ Sinh mã nhân viên tự động
         String maNhanVien = generateMaNhanVien();
 
-        // Tìm vai trò USER (mặc định cho đăng ký)
+        // ✅ Lấy vai trò USER (mặc định cho tài khoản tự đăng ký)
         VaiTro vaiTro = vaiTroRepository.findByMaVaiTro("VT02")
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò USER"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò USER (VT02)"));
 
-        // Tạo nhân viên mới
+        // ✅ Tạo mới nhân viên
         NhanVien nhanVien = new NhanVien();
         nhanVien.setMaNhanVien(maNhanVien);
         nhanVien.setTenNhanVien(request.getTenNhanVien());
         nhanVien.setTaiKhoan(request.getTaiKhoan());
-        nhanVien.setMatKhau(request.getMatKhau()); // Plain text vì dùng NoOpPasswordEncoder
+        nhanVien.setMatKhau(request.getMatKhau()); // Dùng NoOpPasswordEncoder nên giữ nguyên plain text
         nhanVien.setEmail(request.getEmail());
         nhanVien.setSdt(request.getSdt());
         nhanVien.setGioiTinh(request.getGioiTinh());
         nhanVien.setDiaChi(request.getDiaChi());
         nhanVien.setVaiTro(vaiTro);
-        nhanVien.setTrangThai(1); // Active
+        nhanVien.setTrangThai(1); // 1 = Active
 
+        // ✅ Lưu vào DB
         nhanVienRepository.save(nhanVien);
+
         return "SUCCESS";
     }
 
+    /**
+     * Sinh mã nhân viên tự động theo dạng NV001, NV002,...
+     */
     private String generateMaNhanVien() {
         long count = nhanVienRepository.count();
         return String.format("NV%03d", count + 1);

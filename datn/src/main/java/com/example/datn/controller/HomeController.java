@@ -1,11 +1,12 @@
 package com.example.datn.controller;
 
-import com.example.datn.model.Product;
-import com.example.datn.service.ProductService;
+import com.example.datn.dto.ProductDTO;
+import com.example.datn.service.SanPhamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -13,46 +14,78 @@ import java.util.List;
 public class HomeController {
 
     @Autowired
-    private ProductService productService;
+    private SanPhamService sanPhamService;
 
     // Trang chủ
     @GetMapping({"/", "/home"})
     public String home(Model model) {
-        // Lấy danh sách sản phẩm đang sale
-        List<Product> saleProducts = productService.getSaleProducts();
-
-        // Truyền danh sách sản phẩm sang view (home.html)
+        // Lấy sản phẩm SALE từ DB
+        List<ProductDTO> saleProducts = sanPhamService.getSaleProducts();
         model.addAttribute("saleProducts", saleProducts);
-
-        // Trả về tên file giao diện (home.html trong templates)
         return "home";
+    }
 
+    // Chi tiết sản phẩm
+    @GetMapping("/product/{id}")
+    public String productDetail(@PathVariable Integer id, Model model) {
+        try {
+            ProductDTO product = sanPhamService.getProductDetail(id);
+            model.addAttribute("product", product);
+            return "product-detail";
+        } catch (Exception e) {
+            model.addAttribute("error", "Không tìm thấy sản phẩm");
+            return "redirect:/";
+        }
+    }
+
+    // Danh sách sản phẩm mới
+    @GetMapping("/collections/new")
+    public String newProducts(Model model) {
+        List<ProductDTO> products = sanPhamService.getAllProducts();
+        model.addAttribute("products", products);
+        model.addAttribute("pageTitle", "Sản phẩm mới");
+        return "product-list";
+    }
+
+    // Trang sản phẩm giảm giá
+    @GetMapping("/collections/giamgia")
+    public String saleProducts(Model model) {
+        List<ProductDTO> products = sanPhamService.getSaleProducts();
+        model.addAttribute("products", products);
+        model.addAttribute("pageTitle", "Sản phẩm SALE");
+        return "product-list";
     }
 
     @GetMapping("/giohang")
     public String giohang() {
-        return "giohang"; // trả về file login.html trong thư mục templates
+        return "giohang";
     }
+
     @GetMapping("/admin")
     public String admin() {
-        return "admin"; // trả về file login.html trong thư mục templates
+        return "admin";
     }
+
     @GetMapping("/quanlynguoidung")
     public String quanlynguoidung() {
-        return "quanlynguoidung"; // trả về file login.html trong thư mục templates
+        return "quanlynguoidung";
     }
+
     @GetMapping("/quanlysanpham")
     public String quanlysanpham() {
-        return "quanlysanpham"; // trả về file login.html trong thư mục templates
+        return "quanlysanpham";
     }
+
     @GetMapping("/quanlykhachhang")
     public String quanLyKhachHang() {
         return "redirect:/khachhang";
     }
+
     @GetMapping("/quanlyhoadon")
     public String quanlyhoadon() {
-        return "quanlyhoadon"; // trả về file login.html trong thư mục templates
+        return "quanlyhoadon";
     }
+
     @GetMapping("/quanlydanhmuc")
     public String quanLyDanhMuc() {
         return "quanlydanhmuc";
@@ -62,6 +95,7 @@ public class HomeController {
     public String quanLyThuongHieu() {
         return "quanlythuonghieu";
     }
+
     @GetMapping("/quanlybanhang")
     public String quanlybanhang() {
         return "quanlybanhang";
@@ -71,135 +105,66 @@ public class HomeController {
     public String quanLyMaGiam() {
         return "quanlymagiam";
     }
-    @GetMapping("/quenmatkhau")
-    public String repass() {
-        return "quenmatkhau"; // trả về file login.html trong thư mục templates
-    }
-  // trả về file login.html trong thư mục templates
+
+
 
     @GetMapping("/collections/aokhoacparka")
     public String showParkaProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacparka"; // Tên file: product-listing.html
+        return "aokhoacparka";
     }
+
     @GetMapping("/collections/aokhoacsomi")
     public String showsomiProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacsomi"; // Tên file: product-listing.html
+        return "aokhoacsomi";
     }
+
     @GetMapping("/collections/aokhoacjean")
     public String showjeanProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacjean"; // Tên file: product-listing.html
+        return "aokhoacjean";
     }
+
     @GetMapping("/collections/aokhoackaki")
     public String showkakiProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoackaki"; // Tên file: product-listing.html
+        return "aokhoackaki";
     }
+
     @GetMapping("/collections/aokhoacdu")
     public String showduProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacdu"; // Tên file: product-listing.html
+        return "aokhoacdu";
     }
+
     @GetMapping("/collections/aokhoacbomber")
     public String showbomberProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacbomber"; // Tên file: product-listing.html
+        return "aokhoacbomber";
     }
+
     @GetMapping("/collections/aokhoachoodie")
     public String showhoodieProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoachoodie"; // Tên file: product-listing.html
+        return "aokhoachoodie";
     }
+
     @GetMapping("/collections/aokhoacthethao")
     public String showttProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "aokhoacthethao"; // Tên file: product-listing.html
+        return "aokhoacthethao";
     }
+
     @GetMapping("/collections/khampha")
     public String showxtProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "khampha"; // Tên file: product-listing.html
+        return "khampha";
     }
+
     @GetMapping("/collections/nike")
     public String showthProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "nike"; // Tên file: product-listing.html
+        return "nike";
     }
+
     @GetMapping("/collections/adidas")
     public String showaProducts(Model model) {
-
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "adidas"; // Tên file: product-listing.html
+        return "adidas";
     }
-    @GetMapping("/collections/giamgia")
-    public String showddProducts(Model model) {
 
-        // 1. Logic để lấy dữ liệu (Tùy chọn)
-        // Ví dụ: List<SanPham> parkaProducts = productService.findProductsByCategory("Parka");
-        // model.addAttribute("products", parkaProducts);
-
-        // 2. Trả về tên của file HTML nằm trong thư mục templates
-        return "giamgia"; // Tên file: product-listing.html
-    }
     @GetMapping("/login")
     public String login() {
-        return "login"; // file login.html trong templates
+        return "login";
     }
 }
-
