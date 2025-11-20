@@ -1,9 +1,9 @@
 package com.example.datn.service;
 
 import com.example.datn.dto.DangKyRequest;
-import com.example.datn.entity.NhanVien;
+import com.example.datn.entity.KhachHang;
 import com.example.datn.entity.VaiTro;
-import com.example.datn.repository.NhanVienRepository;
+import com.example.datn.repository.KhachHangRepository;
 import com.example.datn.repository.VaiTroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,66 +14,63 @@ import java.util.Optional;
 public class DangKyService {
 
     @Autowired
-    private NhanVienRepository nhanVienRepository;
+    private KhachHangRepository khachHangRepository;
 
     @Autowired
     private VaiTroRepository vaiTroRepository;
 
     /**
-     * Xử lý đăng ký tài khoản mới cho người dùng (vai trò USER mặc định)
+     * Xử lý đăng ký tài khoản mới cho Khách hàng (vai trò USER mặc định)
      */
     public String dangKy(DangKyRequest request) {
 
-        // ✅ Kiểm tra dữ liệu đầu vào
+        // ... (Kiểm tra dữ liệu đầu vào giữ nguyên) ...
         if (request.getTaiKhoan() == null || request.getTaiKhoan().trim().isEmpty()) {
             return "Tài khoản không được để trống";
         }
-
         if (request.getMatKhau() == null || request.getMatKhau().length() < 6) {
             return "Mật khẩu phải có ít nhất 6 ký tự";
         }
-
         if (!request.getMatKhau().equals(request.getXacNhanMatKhau())) {
             return "Mật khẩu xác nhận không khớp";
         }
 
-        // ✅ Kiểm tra tài khoản đã tồn tại chưa
-        Optional<NhanVien> existingNV = nhanVienRepository.findByTaiKhoan(request.getTaiKhoan());
-        if (existingNV.isPresent()) {
+        Optional<KhachHang> existingKH = khachHangRepository.findByTaiKhoan(request.getTaiKhoan());
+        if (existingKH.isPresent()) {
             return "Tài khoản đã tồn tại";
         }
 
-        // ✅ Sinh mã nhân viên tự động
-        String maNhanVien = generateMaNhanVien();
+        String maKhachHang = generateMaKhachHang();
 
-        // ✅ Lấy vai trò USER (mặc định cho tài khoản tự đăng ký)
         VaiTro vaiTro = vaiTroRepository.findByMaVaiTro("VT02")
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò USER (VT02)"));
 
-        // ✅ Tạo mới nhân viên
-        NhanVien nhanVien = new NhanVien();
-        nhanVien.setMaNhanVien(maNhanVien);
-        nhanVien.setTenNhanVien(request.getTenNhanVien());
-        nhanVien.setTaiKhoan(request.getTaiKhoan());
-        nhanVien.setMatKhau(request.getMatKhau()); // Dùng NoOpPasswordEncoder nên giữ nguyên plain text
-        nhanVien.setEmail(request.getEmail());
-        nhanVien.setSdt(request.getSdt());
-        nhanVien.setGioiTinh(request.getGioiTinh());
-        nhanVien.setDiaChi(request.getDiaChi());
-        nhanVien.setVaiTro(vaiTro);
-        nhanVien.setTrangThai(1); // 1 = Active
+        // ✅ Tạo mới Khách hàng
+        KhachHang khachHang = new KhachHang();
+        khachHang.setMaKhachHang(maKhachHang);
+        khachHang.setTenKhachHang(request.getTenKhachHang());
+        khachHang.setTaiKhoan(request.getTaiKhoan());
+        khachHang.setMatKhau(request.getMatKhau());
+        khachHang.setEmail(request.getEmail());
+        khachHang.setSdt(request.getSdt());
+        khachHang.setGioiTinh(request.getGioiTinh());
+        khachHang.setDiaChi(request.getDiaChi());
+        khachHang.setVaiTro(vaiTro);
+
+        // 🛑 SỬA LỖI TRANGTHAI: BIT (1) ánh xạ thành Boolean (true)
+        khachHang.setTrangThai(true);
 
         // ✅ Lưu vào DB
-        nhanVienRepository.save(nhanVien);
+        khachHangRepository.save(khachHang);
 
         return "SUCCESS";
     }
 
     /**
-     * Sinh mã nhân viên tự động theo dạng NV001, NV002,...
+     * Sinh mã Khách hàng tự động theo dạng KH001, KH002,...
      */
-    private String generateMaNhanVien() {
-        long count = nhanVienRepository.count();
-        return String.format("NV%03d", count + 1);
+    private String generateMaKhachHang() {
+        long count = khachHangRepository.count();
+        return String.format("KH%03d", count + 1);
     }
 }

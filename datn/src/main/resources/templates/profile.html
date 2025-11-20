@@ -122,22 +122,21 @@
   <!-- Profile Header -->
   <div class="profile-card">
     <div class="profile-header">
-      <div class="profile-avatar" th:text="${nhanVien.tenNhanVien != null ? nhanVien.tenNhanVien.substring(0,1).toUpperCase() : 'U'}"></div>
+      <div class="profile-avatar" th:text="${khachHang.tenKhachHang != null ? khachHang.tenKhachHang.substring(0,1).toUpperCase() : 'U'}"></div>
       <div class="profile-info">
-        <h2 th:text="${nhanVien.tenNhanVien}">Tên người dùng</h2>
+        <h2 th:text="${khachHang.tenKhachHang}">Tên Khách hàng</h2>
         <p>
-                    <span class="info-badge">
-                        <i class="bi bi-person-badge"></i>
-                        <span th:text="${nhanVien.vaiTro?.tenVaiTro}">Vai trò</span>
-                    </span>
+                <span class="info-badge">
+                    <i class="bi bi-person-badge"></i>
+                    <span th:text="${khachHang.vaiTro?.tenVaiTro}">Vai trò</span>
+                </span>
         </p>
       </div>
     </div>
 
-    <!-- Form cập nhật thông tin -->
-    <form th:action="@{/profile/update}" method="post" th:object="${nhanVien}">
+    <form th:action="@{/profile/update}" method="post" th:object="${khachHang}">
       <input type="hidden" th:field="*{id}">
-      <input type="hidden" th:field="*{maNhanVien}">
+      <input type="hidden" th:field="*{maKhachHang}">
       <input type="hidden" th:field="*{taiKhoan}">
       <input type="hidden" th:field="*{matKhau}">
       <input type="hidden" th:field="*{vaiTro}">
@@ -149,19 +148,19 @@
 
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Mã nhân viên</label>
-          <input type="text" class="form-control readonly-field" th:value="${nhanVien.maNhanVien}" readonly>
+          <label class="form-label">Mã Khách hàng</label>
+          <input type="text" class="form-control readonly-field" th:value="${khachHang.maKhachHang}" readonly>
         </div>
         <div class="col-md-6">
           <label class="form-label">Tài khoản</label>
-          <input type="text" class="form-control readonly-field" th:value="${nhanVien.taiKhoan}" readonly>
+          <input type="text" class="form-control readonly-field" th:value="${khachHang.taiKhoan}" readonly>
         </div>
       </div>
 
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" th:field="*{tenNhanVien}" required>
+          <input type="text" class="form-control" th:field="*{tenKhachHang}" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Giới tính</label>
@@ -194,8 +193,6 @@
       </button>
     </form>
   </div>
-
-  <!-- Đổi mật khẩu -->
   <div class="profile-card">
     <div class="section-title">
       <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu

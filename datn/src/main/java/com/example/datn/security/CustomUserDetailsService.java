@@ -1,7 +1,7 @@
 package com.example.datn.security;
 
-import com.example.datn.entity.NhanVien;
-import com.example.datn.repository.NhanVienRepository;
+import com.example.datn.entity.KhachHang; // Import Entity KhachHang
+import com.example.datn.repository.KhachHangRepository; // Import Repository KhachHang
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,31 +12,33 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private NhanVienRepository nhanVienRepository;
+    private KhachHangRepository khachHangRepository; // 1. Thay thế NhanVienRepository bằng KhachHangRepository
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("=== BẮT ĐẦU TÌM USER: " + username + " ===");
+        System.out.println("=== BẮT ĐẦU TÌM USER KHACHHANG: " + username + " ===");
 
-        NhanVien nhanVien = nhanVienRepository.findByTaiKhoan(username)
+        // 2. Tìm kiếm KhachHang theo TaiKhoan
+        KhachHang khachHang = khachHangRepository.findByTaiKhoan(username)
                 .orElseThrow(() -> {
-                    System.out.println("❌ KHÔNG TÌM THẤY USER: " + username);
+                    System.out.println("❌ KHÔNG TÌM THẤY KHACHHANG: " + username);
                     return new UsernameNotFoundException("Không tìm thấy user: " + username);
                 });
 
-        System.out.println("✅ ĐÃ TÌM THẤY USER:");
-        System.out.println("   - ID: " + nhanVien.getId());
-        System.out.println("   - TaiKhoan: " + nhanVien.getTaiKhoan());
-        System.out.println("   - MatKhau: " + nhanVien.getMatKhau());
-        System.out.println("   - TrangThai: " + nhanVien.getTrangThai());
+        System.out.println("✅ ĐÃ TÌM THẤY KHACHHANG:");
+        System.out.println("   - ID: " + khachHang.getId());
+        System.out.println("   - TaiKhoan: " + khachHang.getTaiKhoan());
+        System.out.println("   - MatKhau: " + khachHang.getMatKhau());
+        System.out.println("   - TrangThai: " + khachHang.getTrangThai());
 
-        if (nhanVien.getVaiTro() != null) {
-            System.out.println("   - VaiTro: " + nhanVien.getVaiTro().getTenVaiTro());
-            System.out.println("   - ID_VaiTro: " + nhanVien.getVaiTro().getIdVaiTro());
+        if (khachHang.getVaiTro() != null) {
+            System.out.println("   - VaiTro: " + khachHang.getVaiTro().getTenVaiTro());
+            System.out.println("   - ID_VaiTro: " + khachHang.getVaiTro().getIdVaiTro());
         } else {
             System.out.println("   - ⚠️ VAI TRÒ LÀ NULL!");
         }
 
-        return new CustomUserDetails(nhanVien);
+        // 3. Sử dụng CustomUserDetails với đối tượng KhachHang
+        return new CustomUserDetails(khachHang);
     }
 }

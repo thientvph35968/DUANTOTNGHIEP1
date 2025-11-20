@@ -1,7 +1,7 @@
 package com.example.datn.controller;
 
-import com.example.datn.entity.NhanVien;
-import com.example.datn.repository.NhanVienRepository;
+import com.example.datn.entity.KhachHang;
+import com.example.datn.repository.KhachHangRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class ProfileController {
 
     @Autowired
-    private NhanVienRepository nhanVienRepository;
+    private KhachHangRepository khachHangRepository;
 
     @GetMapping("/profile")
     public String showProfile(Model model) {
@@ -26,15 +26,15 @@ public class ProfileController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
-        // Tìm nhân viên
-        Optional<NhanVien> nhanVienOpt = nhanVienRepository.findByTaiKhoan(username);
+        // SỬA LỖI: Đổi tên biến từ nhanVienOpt sang khachHangOpt để phù hợp với kiểu KhachHang
+        Optional<KhachHang> khachHangOpt = khachHangRepository.findByTaiKhoan(username);
 
-        if (nhanVienOpt.isEmpty()) {
+        if (khachHangOpt.isEmpty()) {
             return "redirect:/login";
         }
 
-        NhanVien nhanVien = nhanVienOpt.get();
-        model.addAttribute("nhanVien", nhanVien);
+        KhachHang khachHang = khachHangOpt.get();
+        model.addAttribute("khachHang", khachHang);
         model.addAttribute("username", username);
 
         return "profile";
@@ -42,32 +42,37 @@ public class ProfileController {
 
     @PostMapping("/profile/update")
     public String updateProfile(
-            @ModelAttribute NhanVien updatedNhanVien,
+            // 1. SỬA: Đổi tên biến local cho rõ ràng hơn (updatedKhachHang)
+            @ModelAttribute KhachHang updatedKhachHang,
             RedirectAttributes redirectAttributes) {
 
         // Lấy username hiện tại
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
-        // Tìm nhân viên hiện tại
-        Optional<NhanVien> nhanVienOpt = nhanVienRepository.findByTaiKhoan(username);
+        // 2. SỬA: Đổi tên biến Optional (khachHangOpt)
+        // 3. Đảm bảo KhachHangRepository được Autowired
+        Optional<KhachHang> khachHangOpt = khachHangRepository.findByTaiKhoan(username);
 
-        if (nhanVienOpt.isEmpty()) {
+        if (khachHangOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin người dùng");
             return "redirect:/profile";
         }
 
-        NhanVien nhanVien = nhanVienOpt.get();
+        // 4. SỬA: Đổi tên biến local KhachHang
+        KhachHang khachHang = khachHangOpt.get();
 
-        // Cập nhật thông tin (không cho phép đổi tài khoản, mật khẩu, vai trò)
-        nhanVien.setTenNhanVien(updatedNhanVien.getTenNhanVien());
-        nhanVien.setGioiTinh(updatedNhanVien.getGioiTinh());
-        nhanVien.setSdt(updatedNhanVien.getSdt());
-        nhanVien.setEmail(updatedNhanVien.getEmail());
-        nhanVien.setDiaChi(updatedNhanVien.getDiaChi());
+        // Cập nhật thông tin Khách hàng (không cho phép đổi tài khoản, mật khẩu, vai trò)
+        // 5. SỬA: setTenNhanVien -> setTenKhachHang, dùng biến updatedKhachHang
+        khachHang.setTenKhachHang(updatedKhachHang.getTenKhachHang());
 
-        // Lưu vào DB
-        nhanVienRepository.save(nhanVien);
+        khachHang.setGioiTinh(updatedKhachHang.getGioiTinh());
+        khachHang.setSdt(updatedKhachHang.getSdt());
+        khachHang.setEmail(updatedKhachHang.getEmail());
+        khachHang.setDiaChi(updatedKhachHang.getDiaChi());
+
+        // 6. SỬA: Sử dụng khachHangRepository để lưu
+        khachHangRepository.save(khachHang);
 
         redirectAttributes.addFlashAttribute("success", "Cập nhật thông tin thành công!");
         return "redirect:/profile";
@@ -84,18 +89,20 @@ public class ProfileController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
-        // Tìm nhân viên
-        Optional<NhanVien> nhanVienOpt = nhanVienRepository.findByTaiKhoan(username);
+        // 🛑 SỬA LỖI: Tìm Khách hàng và sử dụng khachHangRepository
+        Optional<KhachHang> khachHangOpt = khachHangRepository.findByTaiKhoan(username);
 
-        if (nhanVienOpt.isEmpty()) {
+        if (khachHangOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin người dùng");
             return "redirect:/profile";
         }
 
-        NhanVien nhanVien = nhanVienOpt.get();
+        // 🛑 SỬA LỖI: Gán vào đối tượng KhachHang
+        KhachHang khachHang = khachHangOpt.get();
 
         // Validate
-        if (!nhanVien.getMatKhau().equals(matKhauCu)) {
+        // 🛑 SỬA LỖI: Kiểm tra mật khẩu của Khách hàng
+        if (!khachHang.getMatKhau().equals(matKhauCu)) {
             redirectAttributes.addFlashAttribute("error", "Mật khẩu cũ không đúng");
             return "redirect:/profile";
         }
@@ -111,8 +118,9 @@ public class ProfileController {
         }
 
         // Cập nhật mật khẩu
-        nhanVien.setMatKhau(matKhauMoi);
-        nhanVienRepository.save(nhanVien);
+        khachHang.setMatKhau(matKhauMoi);
+        // 🛑 SỬA LỖI: Lưu bằng khachHangRepository
+        khachHangRepository.save(khachHang);
 
         redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công!");
         return "redirect:/profile";

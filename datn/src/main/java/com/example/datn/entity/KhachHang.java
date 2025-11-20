@@ -25,6 +25,14 @@ public class KhachHang {
     @Column(name = "SDT")
     private String sdt;
 
+    // --- THÊM TRƯỜNG TÀI KHOẢN ---
+    @Column(name = "TaiKhoan", unique = true, nullable = false)
+    private String taiKhoan; // Trường này dùng để khớp với auth.getName()
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ID_VaiTro") // Tên cột khóa ngoại trong bảng KhachHang
+    private VaiTro vaiTro;
+    @Column(name = "MatKhau", nullable = false)
+    private String matKhau;
     @Column(name = "GioiTinh")
     private String gioiTinh;
 

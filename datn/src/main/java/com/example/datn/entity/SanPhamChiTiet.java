@@ -1,5 +1,6 @@
 package com.example.datn.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ public class SanPhamChiTiet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_SanPhamChiTiet")
+    @JsonIgnore
     private Integer id;
 
     @ManyToOne

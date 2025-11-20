@@ -1,0 +1,13 @@
+package com.example.datn.repository;
+
+import com.example.datn.entity.Voucher;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+// ===== VoucherRepository =====
+@Repository
+public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
+    Optional<Voucher> findByMaVoucherAndTrangThai(String maVoucher, Boolean trangThai);
+}

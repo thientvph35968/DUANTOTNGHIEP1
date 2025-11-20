@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,13 +38,19 @@ public class SanPhamService {
         return dtos;
     }
 
-    // Lấy chi tiết sản phẩm
+    // ✅ Lấy chi tiết sản phẩm THỰC TỪ DB
     public ProductDTO getProductDetail(Integer id) {
+        // Lấy sản phẩm từ DB với đầy đủ quan hệ
         SanPham sanPham = sanPhamRepository.findByIdWithDetails(id);
+
         if (sanPham == null) {
             throw new RuntimeException("Không tìm thấy sản phẩm với ID: " + id);
         }
-        return convertToDTO(sanPham);
+
+        // Convert sang DTO với đầy đủ thông tin
+        ProductDTO dto = convertToDetailDTO(sanPham);
+
+        return dto;
     }
 
     // Convert List Entity sang List DTO
@@ -53,7 +60,7 @@ public class SanPhamService {
                 .collect(Collectors.toList());
     }
 
-    // Convert Entity sang DTO
+    // Convert Entity sang DTO (cho danh sách)
     private ProductDTO convertToDTO(SanPham sp) {
         ProductDTO dto = new ProductDTO();
         dto.setId(sp.getId());
@@ -65,7 +72,7 @@ public class SanPhamService {
         if (sp.getHinhAnh() != null && !sp.getHinhAnh().isEmpty()) {
             dto.setHinhAnh("/" + sp.getHinhAnh());
         } else {
-            dto.setHinhAnh("/default.jpg"); // Ảnh mặc định
+            dto.setHinhAnh("/default.jpg");
         }
 
         // Lấy tên thương hiệu
@@ -75,19 +82,86 @@ public class SanPhamService {
 
         // Lấy giá và số lượng từ chi tiết sản phẩm
         if (sp.getChiTietList() != null && !sp.getChiTietList().isEmpty()) {
-            // Lấy giá từ chi tiết sản phẩm đầu tiên
             SanPhamChiTiet firstDetail = sp.getChiTietList().get(0);
             dto.setDonGia(firstDetail.getDonGia());
 
-            // Tính tổng số lượng tồn từ tất cả các biến thể
             int tongSoLuong = sp.getChiTietList().stream()
                     .filter(ct -> ct.getSoLuong() != null)
                     .mapToInt(SanPhamChiTiet::getSoLuong)
                     .sum();
             dto.setSoLuongTon(tongSoLuong);
         } else {
-            dto.setDonGia(java.math.BigDecimal.ZERO);
+            dto.setDonGia(BigDecimal.ZERO);
             dto.setSoLuongTon(0);
+        }
+
+        return dto;
+    }
+
+    // ✅ Convert Entity sang DTO CHI TIẾT (với đầy đủ thông tin)
+    private ProductDTO convertToDetailDTO(SanPham sp) {
+        ProductDTO dto = new ProductDTO();
+
+        // Thông tin cơ bản
+        dto.setId(sp.getId());
+        dto.setMaSanPham(sp.getMaSanPham());
+        dto.setTenSanPham(sp.getTenSanPham());
+        dto.setMoTa(sp.getMoTa());
+        dto.setTrangThai(sp.getTrangThai());
+
+        // Xử lý hình ảnh
+        if (sp.getHinhAnh() != null && !sp.getHinhAnh().isEmpty()) {
+            // Kiểm tra xem đã có "/" chưa
+            if (sp.getHinhAnh().startsWith("/")) {
+                dto.setHinhAnh(sp.getHinhAnh());
+            } else {
+                dto.setHinhAnh("/" + sp.getHinhAnh());
+            }
+        } else {
+            dto.setHinhAnh("/default.jpg");
+        }
+
+        // Thương hiệu
+        if (sp.getThuongHieu() != null) {
+            dto.setThuongHieu(sp.getThuongHieu().getTenThuongHieu());
+        } else {
+            dto.setThuongHieu("Chưa xác định");
+        }
+
+        // Lấy thông tin giá và số lượng từ chi tiết sản phẩm
+        if (sp.getChiTietList() != null && !sp.getChiTietList().isEmpty()) {
+            // Lọc các chi tiết còn hoạt động
+            List<SanPhamChiTiet> activeDetails = sp.getChiTietList().stream()
+                    .filter(ct -> ct.getTrangThai() != null && ct.getTrangThai())
+                    .collect(Collectors.toList());
+
+            if (!activeDetails.isEmpty()) {
+                // Lấy giá từ chi tiết đầu tiên (hoặc giá trung bình)
+                SanPhamChiTiet firstDetail = activeDetails.get(0);
+                dto.setDonGia(firstDetail.getDonGia() != null ?
+                        firstDetail.getDonGia() : BigDecimal.ZERO);
+
+                // Tính tổng số lượng tồn kho
+                int tongSoLuong = activeDetails.stream()
+                        .filter(ct -> ct.getSoLuong() != null)
+                        .mapToInt(SanPhamChiTiet::getSoLuong)
+                        .sum();
+                dto.setSoLuongTon(tongSoLuong);
+
+                // Log để debug
+                System.out.println("=== CHI TIẾT SẢN PHẨM ID: " + sp.getId() + " ===");
+                System.out.println("Tên: " + sp.getTenSanPham());
+                System.out.println("Giá: " + dto.getDonGia());
+                System.out.println("Số lượng tồn: " + tongSoLuong);
+                System.out.println("Số biến thể: " + activeDetails.size());
+            } else {
+                dto.setDonGia(BigDecimal.ZERO);
+                dto.setSoLuongTon(0);
+            }
+        } else {
+            dto.setDonGia(BigDecimal.ZERO);
+            dto.setSoLuongTon(0);
+            System.out.println("⚠️ Sản phẩm " + sp.getId() + " không có chi tiết!");
         }
 
         return dto;

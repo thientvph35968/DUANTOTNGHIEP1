@@ -24,15 +24,18 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập public
+                        // Cho phép truy cập public - SỬA LẠI THỨ TỰ
                         .requestMatchers(
                                 "/", "/home",
                                 "/login", "/dangky", "/dangki",
+                                "/quenmatkhau",
                                 "/product/**",
                                 "/collections/**",
                                 "/api/cart/**",
-                                "/css/**", "/js/**", "/**",
-                                "/*.jpg", "/*.png", "/*.gif"
+                                "/css/**", "/js/**", "/images/**",
+                                "/*.jpg", "/*.png", "/*.gif", "/*.jpeg",
+                                "/favicon.ico",
+                                "/error"
                         ).permitAll()
                         // Chỉ ADMIN mới truy cập được
                         .requestMatchers(
@@ -43,8 +46,11 @@ public class SecurityConfig {
                                 "/quanlydanhmuc",
                                 "/quanlythuonghieu",
                                 "/quanlybanhang",
-                                "/quanlymagiam"
+                                "/quanlymagiam",
+                                "/khachhang/**"
                         ).hasRole("ADMIN")
+                        // Yêu cầu đăng nhập cho các trang còn lại
+                        .requestMatchers("/profile/**", "/giohang").authenticated()
                         // Các request khác phải đăng nhập
                         .anyRequest().authenticated()
                 )
@@ -60,9 +66,14 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
-                .csrf(csrf -> csrf.disable());
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/error/403")
+                )
+                .csrf(csrf -> csrf.disable()); // Tạm thời disable để test
 
         return http.build();
     }

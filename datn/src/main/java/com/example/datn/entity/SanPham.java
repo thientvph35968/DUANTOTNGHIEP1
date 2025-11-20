@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,6 +38,7 @@ public class SanPham {
     @JoinColumn(name = "ID_ThuongHieu")
     private ThuongHieu thuongHieu;
 
-    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
-    private List<SanPhamChiTiet> chiTietList;
+    // ✅ SỬA: Đổi sang EAGER để tránh lỗi lazy loading
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.EAGER)
+    private List<SanPhamChiTiet> chiTietList = new ArrayList<>();
 }

@@ -1,6 +1,6 @@
 package com.example.datn.security;
 
-import com.example.datn.entity.NhanVien;
+import com.example.datn.entity.KhachHang; // Thay đổi import sang KhachHang
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,20 +9,24 @@ import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
-    private final NhanVien nhanVien;
 
-    public CustomUserDetails(NhanVien nhanVien) {
-        this.nhanVien = nhanVien;
+    // 1. Thay thế NhanVien bằng KhachHang
+    private final KhachHang khachHang;
+
+    // Constructor mới nhận vào KhachHang
+    public CustomUserDetails(KhachHang khachHang) {
+        this.khachHang = khachHang;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (nhanVien.getVaiTro() == null) {
+        // 2. Lấy VaiTro từ KhachHang
+        if (khachHang.getVaiTro() == null) {
             System.out.println("❌ VAI TRÒ NULL!");
             return List.of();
         }
 
-        String roleName = nhanVien.getVaiTro().getTenVaiTro();
+        String roleName = khachHang.getVaiTro().getTenVaiTro();
         String authority = "ROLE_" + roleName;
         System.out.println("✅ AUTHORITY: " + authority);
 
@@ -31,14 +35,16 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        String password = nhanVien.getMatKhau();
+        // 3. Lấy MatKhau từ KhachHang
+        String password = khachHang.getMatKhau();
         System.out.println("   - Password trả về: " + password);
         return password;
     }
 
     @Override
     public String getUsername() {
-        return nhanVien.getTaiKhoan();
+        // 4. Lấy TaiKhoan từ KhachHang
+        return khachHang.getTaiKhoan();
     }
 
     @Override
@@ -58,8 +64,16 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // Sửa lỗi: So sánh Integer với Integer, không phải boolean với Integer
-        boolean enabled = nhanVien.getTrangThai() != null && nhanVien.getTrangThai() == 1;
+        // Giả định KhachHang.getTrangThai() trả về kiểu Boolean (Ánh xạ từ cột BIT trong SQL)
+
+        boolean enabled = false; // Mặc định là false
+
+        if (khachHang.getTrangThai() != null) {
+            // Nếu TrangThai là Boolean, chỉ cần kiểm tra xem nó có phải là true không
+            // (true tương ứng với 1 trong SQL BIT)
+            enabled = khachHang.getTrangThai().booleanValue();
+        }
+
         System.out.println("   - isEnabled: " + enabled);
         return enabled;
     }

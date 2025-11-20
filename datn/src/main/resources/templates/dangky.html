@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Đăng ký tài khoản</title>
+  <title>Đăng ký tài khoản Khách hàng</title>
   <style>
     :root {
       --bg: #f3f6fb;
@@ -152,18 +152,16 @@
     <img th:src="@{/PL.jpg}" alt="Logo" class="logo-img">
   </div>
 
-  <h2>Đăng ký tài khoản</h2>
+  <h2>Đăng ký tài khoản Khách hàng</h2>
   <p class="subtitle">Tạo tài khoản mới 🚀</p>
 
-  <!-- Thông báo lỗi / thành công -->
   <p th:if="${error}" class="error-message" th:text="${error}"></p>
   <p th:if="${success}" class="success-message" th:text="${success}"></p>
 
-  <!-- Form đăng ký -->
   <form th:action="@{/dangky}" method="post" th:object="${dangKyRequest}">
     <div class="form-group">
-      <label for="tenNhanVien">Họ và tên <span class="required">*</span></label>
-      <input type="text" id="tenNhanVien" th:field="*{tenNhanVien}"
+      <label for="tenKhachHang">Họ và tên <span class="required">*</span></label>
+      <input type="text" id="tenKhachHang" th:field="*{tenKhachHang}"
              placeholder="Nguyễn Văn A" required pattern="[A-Za-zÀ-ỹ\s]+">
     </div>
 

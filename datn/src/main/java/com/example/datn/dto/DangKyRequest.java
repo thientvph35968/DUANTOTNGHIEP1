@@ -4,7 +4,9 @@ import lombok.Data;
 
 @Data
 public class DangKyRequest {
-    private String tenNhanVien;
+    // Đã sửa từ tenNhanVien thành tenKhachHang
+    private String tenKhachHang;
+
     private String taiKhoan;
     private String matKhau;
     private String xacNhanMatKhau;
@@ -12,4 +14,5 @@ public class DangKyRequest {
     private String sdt;
     private String gioiTinh;
     private String diaChi;
+    private Boolean trangThai;
 }

@@ -15,14 +15,14 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);
-            message.setSubject("Đặt lại mật khẩu - PL Jacket");
+            message.setSubject("Đặt lại mật khẩu - Coatify");
             message.setText(
                     "Xin chào,\n\n" +
                             "Bạn đã yêu cầu đặt lại mật khẩu.\n\n" +
                             "Mật khẩu mới của bạn là: " + newPassword + "\n\n" +
                             "Vui lòng đăng nhập và đổi mật khẩu ngay sau khi nhận được email này.\n\n" +
                             "Trân trọng,\n" +
-                            "PL Jacket Team"
+                            "Coatify"
             );
 
             mailSender.send(message);
