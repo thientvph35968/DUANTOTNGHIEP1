@@ -8,7 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface NhanVienRepository extends JpaRepository<NhanVien, Integer> {
+
     Optional<NhanVien> findByTaiKhoan(String taiKhoan);
-    NhanVien findByTaiKhoanAndMatKhau(String taiKhoan, String matKhau);
-    Optional<NhanVien> findByEmail(String email);
+
+    boolean existsByMaNhanVien(String maNhanVien);
 }

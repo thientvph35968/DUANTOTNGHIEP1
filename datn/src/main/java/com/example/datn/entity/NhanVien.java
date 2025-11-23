@@ -1,12 +1,21 @@
 package com.example.datn.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "NhanVien")
 @Data
-public class NhanVien {
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class NhanVien implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_NhanVien")
@@ -40,6 +49,7 @@ public class NhanVien {
     @Column(name = "DiaChi")
     private String diaChi;
 
+    // BIT trong SQL → Boolean trong Java là đẹp nhất
     @Column(name = "TrangThai")
-    private Integer trangThai;
+    private Boolean trangThai;
 }

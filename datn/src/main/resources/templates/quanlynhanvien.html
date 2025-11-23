@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý nhân viên</title>
+</head>
+<body>
+
+<h2>Quản lý nhân viên</h2>
+
+<div th:if="${success}">
+    <p style="color: green" th:text="${success}"></p>
+</div>
+<div th:if="${error}">
+    <p style="color: red" th:text="${error}"></p>
+</div>
+
+<table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Mã NV</th>
+        <th>Tên NV</th>
+        <th>Giới tính</th>
+        <th>Tài khoản</th>
+        <th>SĐT</th>
+        <th>Email</th>
+        <th>Vai trò</th>
+        <th>Trạng thái</th>
+        <th>Hành động</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="nv : ${ListNhanVien}">
+        <td th:text="${nv.id}"></td>
+        <td th:text="${nv.maNhanVien}"></td>
+        <td th:text="${nv.tenNhanVien}"></td>
+        <td th:text="${nv.gioiTinh}"></td>
+        <td th:text="${nv.taiKhoan}"></td>
+        <td th:text="${nv.sdt}"></td>
+        <td th:text="${nv.email}"></td>
+        <td th:text="${nv.vaiTro != null ? nv.vaiTro.tenVaiTro : 'Chưa gán'}"></td>
+        <td th:text="${nv.trangThai} ? 'Hoạt động' : 'Ngừng'"></td>
+        <td>
+            <a th:href="@{'/admin/nhan-vien/edit/' + ${nv.id}}">Sửa</a>
+            |
+            <a th:href="@{'/admin/nhan-vien/delete/' + ${nv.id}}"
+               onclick="return confirm('Xóa nhân viên này?');">Xóa</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h3 th:text="${nhanVien.id == null} ? 'Thêm nhân viên' : 'Sửa nhân viên'"></h3>
+
+<form th:object="${nhanVien}"
+      th:action="@{/admin/nhan-vien/save}"
+      method="post">
+
+    <input type="hidden" th:field="*{id}"/>
+
+    <div>
+        <label>Mã nhân viên:</label>
+        <input type="text" th:field="*{maNhanVien}" required/>
+    </div>
+
+    <div>
+        <label>Tên nhân viên:</label>
+        <input type="text" th:field="*{tenNhanVien}" required/>
+    </div>
+
+    <div>
+        <label>Giới tính:</label>
+        <select th:field="*{gioiTinh}">
+            <option value="">-- Chọn --</option>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+            <option value="Khác">Khác</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Tài khoản:</label>
+        <input type="text" th:field="*{taiKhoan}" required/>
+    </div>
+
+    <div>
+        <label>Mật khẩu:</label>
+        <input type="text" th:field="*{matKhau}" required/>
+    </div>
+
+    <div>
+        <label>SĐT:</label>
+        <input type="text" th:field="*{sdt}"/>
+    </div>
+
+    <div>
+        <label>Email:</label>
+        <input type="email" th:field="*{email}"/>
+    </div>
+
+    <div>
+        <label>Địa chỉ:</label>
+        <input type="text" th:field="*{diaChi}"/>
+    </div>
+
+    <div>
+        <label>Vai trò:</label>
+        <select th:field="*{vaiTro.idVaiTro}" required>
+            <option value="">-- Chọn vai trò --</option>
+            <option th:each="vt : ${dsVaiTro}"
+                    th:value="${vt.idVaiTro}"
+                    th:text="${vt.tenVaiTro}">
+            </option>
+        </select>
+
+    </div>
+
+    <div>
+        <label>Trạng thái:</label>
+        <select th:field="*{trangThai}">
+            <option th:value="true">Hoạt động</option>
+            <option th:value="false">Ngừng</option>
+        </select>
+    </div>
+
+    <button type="submit">Lưu</button>
+</form>
+
+</body>
+</html>
