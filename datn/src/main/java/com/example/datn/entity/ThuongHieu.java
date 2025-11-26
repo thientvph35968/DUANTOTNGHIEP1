@@ -15,7 +15,7 @@ public class ThuongHieu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_ThuongHieu")
-    private Integer idThuongHieu;
+    private Integer id; // *** SỬA Ở ĐÂY: Đổi tên từ idThuongHieu thành id ***
 
     @Column(name = "MaThuongHieu")
     private String maThuongHieu;

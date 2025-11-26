@@ -1,695 +1,247 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>PL jacket</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <style>
-    /* ==================================== */
-    /* 1. THIẾT LẬP CHUNG & FONT CHỮ */
-    /* ==================================== */
-    body {
-      /* Đảm bảo font chữ nhất quán cho toàn trang */
-      font-family: 'Roboto', "Segoe UI", sans-serif;
-      background-color: #f8f8f8; /* Nền nhẹ cho toàn trang */
-      margin: 0;
-      box-sizing: border-box;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    /* ==================================== */
-    /* 2. HEADER & NAVIGATION */
-    /* ==================================== */
-
-    /* Thanh trên cùng (Top Bar) */
-    header.top-bar {
-      background-color: #0a2a6c;
-      color: white;
-      font-size: 14px;
-      padding: 8px 0;
-    }
-
-    /* Thanh Menu chính (Navbar) */
-    .navbar {
-      border-bottom: 1px solid #ddd;
-      background-color: #fff;
-    }
-
-    .navbar .nav-link {
-      color: #333;
-      padding: 10px 15px;
-      transition: color 0.3s;
-    }
-
-    .navbar .nav-link:hover,
-    .navbar .nav-link.active {
-      color: #0a2a6c;
-      font-weight: 500;
-    }
-
-    /* Biểu tượng (Icon) trong Navbar */
-    .navbar .bi-person,
-    .navbar .bi-bag-fill {
-      font-size: 20px;
-    }
-
-    .navbar .cart-badge {
-      position: absolute;
-      top: 0;
-      right: -5px;
-      background: #c00;
-      color: white;
-      font-size: 10px;
-      padding: 2px 5px;
-      border-radius: 50%;
-    }
-
-    /* --- Menu Dropdown & Mega Menu --- */
-    @media (min-width: 992px) {
-      .mega-menu {
-        display: block;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-        position: absolute;
-        width: max-content;
-        min-width: 250px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        padding: 15px;
-        background-color: #fff; /* Thêm nền trắng cho dropdown */
-        z-index: 1000; /* Đảm bảo nó nằm trên nội dung khác */
-      }
-
-      .static-dropdown:hover .mega-menu {
-        opacity: 1;
-        visibility: visible;
-        margin-top: 0;
-      }
-
-      .dropdown-toggle::after,
-      .nav-item.dropdown > a::after {
-        display: none !important;
-      }
-    }
-    .dropdown-menu a {
-      color: #333;
-      padding: 8px 15px;
-    }
-    .dropdown-menu a:hover {
-      background-color: #f0f0f0;
-      color: #0a2a6c;
-    }
-
-
-    /* ==================================== */
-    /* 3. HERO BANNER */
-    /* ==================================== */
-    .hero {
-      position: relative;
-      width: 100%;
-      height: 380px;
-      background: url('/hero-banner.jpg') center center/cover no-repeat;
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 30px auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 1;
-    }
-
-    .hero h1 {
-      position: relative;
-      z-index: 2;
-      font-size: 48px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-
-    @media (max-width: 768px) {
-      .hero {
-        height: 220px;
-        border-radius: 8px;
-      }
-      .hero h1 {
-        font-size: 28px;
-      }
-    }
-
-
-    /* ==================================== */
-    /* 4. SẢN PHẨM & CARD */
-    /* ==================================== */
-    .product-section {
-      padding: 40px 0;
-    }
-
-    .product-card {
-      border: 1px solid #eee;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
-      background-color: #fff;
-    }
-
-    .product-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    .product-card img {
-      width: 100%;
-      height: 280px;
-      object-fit: cover;
-    }
-
-    .product-info {
-      padding: 16px;
-    }
-
-    .product-info .name {
-      font-size: 16px;
-      margin-bottom: 8px;
-      color: #333;
-      min-height: 40px;
-    }
-
-    .product-info .price {
-      color: #c00;
-      font-weight: bold;
-    }
-
-    .product-info .old-price {
-      text-decoration: line-through;
-      color: #888;
-      margin-left: 8px;
-    }
-
-    .color-circle {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      margin: 5px;
-      cursor: pointer;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
-      transition: transform 0.1s ease;
-    }
-
-
-    /* ==================================== */
-    /* 5. CHECKOUT FORM (GIỎ HÀNG/THANH TOÁN) */
-    /* ==================================== */
-    .checkout-wrapper {
-      display: flex;
-      max-width: 1200px;
-      width: 100%;
-      gap: 30px;
-      padding: 30px 20px;
-      margin: 0 auto;
-    }
-
-    .left-column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .right-column {
-      flex: 1.2;
-    }
-
-    .section {
-      background-color: #fff;
-      padding: 25px 30px;
-      border: 1px solid #eee;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 500;
-      color: #333;
-      text-transform: uppercase;
-      margin: 0 0 15px 0;
-      padding-bottom: 5px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .section-subtitle {
-      font-size: 14px;
-      color: #555;
-      margin-top: -10px;
-      margin-bottom: 20px;
-    }
-
-    /* CỘT TRÁI */
-    .empty-cart-message {
-      font-size: 15px;
-      color: #777;
-      padding: 10px 0;
-    }
-
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      font-size: 15px;
-      color: #555;
-    }
-
-    .summary-total {
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #ccc;
-      padding-top: 15px;
-      margin-top: 10px;
-      font-size: 18px;
-      color: #333;
-    }
-
-    .summary-total .total-price {
-      color: #d9534f;
-      font-weight: 700;
-    }
-
-    .payment-options label {
-      display: block;
-      padding: 5px 0;
-      cursor: pointer;
-    }
-
-    /* CỘT PHẢI */
-    .input-group {
-      margin-bottom: 15px;
-    }
-
-    .input-group input,
-    .input-group textarea {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #eee;
-      background-color: #fcfcfc;
-      font-size: 15px;
-      box-sizing: border-box;
-      border-radius: 0;
-    }
-
-    .input-group textarea {
-      resize: none;
-      font-family: inherit;
-    }
-
-    .input-group input:focus,
-    .input-group textarea:focus {
-      border-color: #ccc;
-      outline: none;
-      background-color: #fff;
-    }
-
-    .place-order-button {
-      width: auto;
-      padding: 12px 25px;
-      background-color: #444;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-      border: none;
-      border-radius: 2px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background-color 0.3s;
-    }
-
-    .place-order-button:hover {
-      background-color: #222;
-    }
-
-
-    /* ==================================== */
-    /* 6. FOOTER */
-    /* ==================================== */
-    .main-footer {
-      background-color: #000;
-      color: #fff;
-      padding-top: 5rem !important; /* Dùng !important nếu cần ghi đè Bootstrap */
-      padding-bottom: 2rem !important;
-      margin-top: 50px;
-    }
-
-    .main-footer .text-white a {
-      color: #fff;
-      text-decoration: none;
-      transition: color 0.3s;
-      font-size: 14px;
-    }
-
-    .main-footer .text-white a:hover {
-      color: #bbb;
-    }
-
-    .main-footer .footer-links li {
-      margin-bottom: 5px;
-    }
-
-    .main-footer .hashtag {
-      color: #dc3545;
-    }
-
-    /* Icons & Info */
-    .main-footer .row:first-child i {
-      color: #fff;
-      margin-top: 10px;
-    }
-    .main-footer .row:first-child p.fw-bold {
-      color: #fff;
-      margin-bottom: 0;
-    }
-    .main-footer .text-muted {
-      color: #aaa !important;
-    }
-
-    /* Social icons */
-    .main-footer .social-icons a {
-      transition: opacity 0.3s;
-    }
-    .main-footer .social-icons a:hover {
-      opacity: 0.7;
-    }
-
-
-    /* ==================================== */
-    /* 7. RESPONSIVE */
-    /* ==================================== */
-    @media (max-width: 992px) {
-      /* Checkout Form */
-      .checkout-wrapper {
-        flex-direction: column;
-        gap: 20px;
-      }
-      .right-column {
-        order: -1;
-      }
-
-      /* Footer */
-      .main-footer .row:first-child {
-        flex-direction: column;
-        align-items: center;
-      }
-      .main-footer .row:first-child > div {
-        margin-bottom: 15px !important;
-      }
-    }
-
-    @media (max-width: 576px) {
-      /* Navbar */
-      .navbar-brand {
-        font-size: 24px !important;
-      }
-
-      /* Footer */
-      .main-footer .col-6 {
-        flex: 0 0 50%;
-        max-width: 50%;
-      }
-    }
-  </style>
-
+    <style>
+        body {
+            font-family: 'Roboto', "Segoe UI", sans-serif;
+            background-color: #f8f8f8;
+        }
+        .checkout-wrapper {
+            display: flex;
+            max-width: 1200px;
+            margin: 30px auto;
+            gap: 30px;
+        }
+        .left-column { flex: 1.5; }
+        .right-column { flex: 1; }
+        .section {
+            background-color: #fff;
+            padding: 25px 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-img { width: 90px; height: 110px; object-fit: cover; border-radius: 4px; margin-right: 20px; }
+        .cart-item-info { flex-grow: 1; }
+        .cart-item-name { font-weight: 500; margin-bottom: 8px; }
+        .cart-item-price { color: #888; font-size: 14px; }
+        .cart-item-quantity { display: flex; align-items: center; }
+        .quantity-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+        }
+        .quantity-input {
+            width: 45px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-left: none;
+            border-right: none;
+            height: 32px;
+        }
+        .cart-item-total { font-weight: bold; min-width: 120px; text-align: right; }
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 22px;
+            margin-left: 20px;
+        }
+        .cart-item-remove:hover { color: #d9534f; }
+        .summary-item { display: flex; justify-content: space-between; padding: 10px 0; }
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .place-order-button {
+            display: block; /* *** SỬA Ở ĐÂY: Chuyển thành block để nhận margin *** */
+            width: 100%;
+            padding: 12px;
+            background-color: #212529;
+            color: #fff;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .place-order-button:hover { background-color: #424649; }
+        .empty-cart-message { text-align: center; padding: 50px; color: #777; }
+    </style>
 </head>
 <body>
 
-<header class="top-bar text-center">
-  Miễn phí vận chuyển đơn hàng trên 1 triệu | Hotline: 18000 888 38
-</header>
-
-<nav class="navbar navbar-expand-lg bg-white">
-  <div class="container">
-    <a class="navbar-brand fw-bold fs-3" href="/"> Coatify</a>
-
-    <form class="d-flex me-4 d-none d-lg-flex" role="search">
-      <input class="form-control me-2" type="search" placeholder="Tìm kiếm sản phẩm..." aria-label="Search" style="width: 250px;">
-      <button class="btn btn-outline-dark" type="submit">
-        <i class="bi bi-search"></i>
-      </button>
-    </form>
-
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-
-        <li class="nav-item dropdown static-dropdown">
-          <a class="nav-link dropdown-toggle" href="/collections/new" id="newProductsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Sản phẩm mới
-          </a>
-          <div class="dropdown-menu mega-menu" aria-labelledby="newProductsDropdown">
-            <div class="container-fluid">
-              <div class="row justify-content-start">
-
-                <div class="col-md-3">
-                  <a class="dropdown-item" href="/collections/aokhoacparka">Áo Khoác Parka</a>
-                  <a class="dropdown-item" href="/collections/aokhoacsomi">Áo Khoác Sơ Mi</a>
-                  <a class="dropdown-item" href="/collections/aokhoacjean">Áo Khoác Jean</a>
-                  <a class="dropdown-item" href="/collections/aokhoackaki">Áo Khoác Kaki</a>
-                  <a class="dropdown-item" href="/collections/aokhoacdu">Áo Khoác Dù</a>
-                  <a class="dropdown-item" href="/collections/aokhoacbomber">Áo Khoác Bomber</a>
-                  <a class="dropdown-item" href="/collections/aokhoachoodie">Áo Khoác Hoodie</a>
-                  <a class="dropdown-item" href="/collections/aokhoacthethao">Áo Khoác Thể Thao</a>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </li>
-
-        <li class="nav-item dropdown static-dropdown">
-          <a class="nav-link dropdown-toggle" href="/collections/thuonghieu">Thương hiệu</a>
-          <div class="dropdown-menu mega-menu">
-            <div class="container-fluid">
-              <div class="row">
-                <div class="col-12">
-                  <a class="dropdown-item" href="/collections/nike">Nike</a>
-                  <a class="dropdown-item" href="/collections/adidas">Adidas</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="nav-item"><a class="nav-link active me-3" href="/collections/giamgia">SALE</a></li>
-
-        <a class="nav-link p-0" th:href="@{/login}">
-          <i class="bi bi-person fs-5 text-dark"></i>
-        </a>
-
-
-        <li class="nav-item">
-          <a class="nav-link p-0 position-relative" href="/cart">
-            <i class="bi bi-bag-fill fs-5 text-dark"></i>
-            <span class="cart-badge">0</span>
-          </a>
-        </li>
-      </ul>
-
-      <form class="d-flex mt-2 d-lg-none" role="search">
-        <input class="form-control me-2" type="search" placeholder="Tìm kiếm sản phẩm..." aria-label="Search">
-        <button class="btn btn-outline-dark" type="submit">
-          <i class="bi bi-search"></i>
-        </button>
-      </form>
-
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-3" href="/">Coatify</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+                <li class="nav-item dropdown" th:if="${isAuthenticated}">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5 me-2"></i>
+                        <span th:text="${username}"></span>
+                    </a>
+                </li>
+                <li class="nav-item ms-3">
+                    <a class="nav-link p-0 position-relative" th:href="@{/giohang}">
+                        <i class="bi bi-bag-fill fs-5"></i>
+                        <span class="cart-badge position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>
-<div class="checkout-wrapper">
-  <div class="left-column">
 
-    <div class="section order-details">
-      <h2 class="section-title">CHI TIẾT ĐƠN HÀNG</h2>
-      <p class="empty-cart-message">Chưa có sản phẩm trong giỏ của bạn. Mua hàng tiếp!</p>
+<div class="container">
+    <div class="checkout-wrapper">
+        <!-- CỘT TRÁI - CHI TIẾT GIỎ HÀNG -->
+        <div class="left-column">
+            <div class="section">
+                <h2 class="section-title">Giỏ hàng của bạn</h2>
+
+                <!-- Trường hợp giỏ hàng có sản phẩm -->
+                <div th:if="${cartItems != null and !cartItems.isEmpty()}">
+                    <div th:each="item : ${cartItems}" class="cart-item" th:data-id="${item.idGioHangChiTiet}">
+                        <img th:src="@{${item.hinhAnh}}" alt="Hình sản phẩm" class="cart-item-img"/>
+                        <div class="cart-item-info">
+                            <p class="cart-item-name" th:text="${item.tenSanPham}">Tên sản phẩm</p>
+                            <p class="cart-item-price" th:text="${item.giaSanPham}">Giá</p>
+                        </div>
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn" th:onclick="'updateQuantity(' + ${item.idGioHangChiTiet} + ', ' + (${item.soLuong} - 1) + ')'">-</button>
+                            <input type="number" class="quantity-input" th:value="${item.soLuong}" readonly />
+                            <button class="quantity-btn" th:onclick="'updateQuantity(' + ${item.idGioHangChiTiet} + ', ' + (${item.soLuong} + 1) + ')'">+</button>
+                        </div>
+                        <span class="cart-item-total" th:text="${item.tongTien}">Tổng tiền</span>
+                        <button class="cart-item-remove" th:onclick="'removeItem(' + ${item.idGioHangChiTiet} + ')'">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trường hợp giỏ hàng trống -->
+                <div th:if="${cartItems == null or cartItems.isEmpty()}" class="empty-cart-message">
+                    <p>Chưa có sản phẩm trong giỏ của bạn.</p>
+                    <a href="/" class="btn btn-dark mt-3">Tiếp tục mua sắm</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI - TÓM TẮT ĐƠN HÀNG -->
+        <div class="right-column">
+            <div class="section">
+                <h2 class="section-title">Tóm tắt đơn hàng</h2>
+                <div class="summary-item" th:if="${loggedInUser}">
+                    <span>Khách hàng</span>
+                    <span th:text="${loggedInUser}"></span>
+                </div>
+                <div class="summary-item" th:if="${userPhone}">
+                    <span>Số điện thoại</span>
+                    <span th:text="${userPhone}"></span>
+                </div>
+                <div class="summary-total">
+                    <span>Tổng cộng</span>
+                    <span th:text="${grandTotal}">0₫</span>
+                </div>
+                <a th:href="@{/checkout}" class="place-order-button mt-4 text-center text-decoration-none">TIẾN HÀNH ĐẶT HÀNG</a>
+            </div>
+        </div>
     </div>
-
-    <div class="section payment-details">
-      <h2 class="section-title">CHI TIẾT THANH TOÁN</h2>
-
-      <div class="payment-summary">
-        <div class="summary-item">
-          <span>Tổng sản phẩm</span>
-          <span class="price">0 Đ</span>
-        </div>
-
-        <div class="summary-item radio-group">
-          <span>Phương thức thanh toán</span>
-          <div class="payment-options">
-            <label>
-              <input type="radio" name="payment_method" value="cod" checked>
-              Thanh toán COD
-            </label>
-            <label>
-              <input type="radio" name="payment_method" value="transfer">
-              Chuyển khoản trước
-            </label>
-          </div>
-        </div>
-
-        <div class="summary-item">
-          <span>Phí ship (tạm tính)</span>
-          <span class="price">30.000 Đ</span>
-        </div>
-      </div>
-
-      <div class="summary-total">
-        <strong>Tổng đơn hàng</strong>
-        <strong class="total-price">30.000 Đ</strong>
-      </div>
-    </div>
-  </div>
-
-  <div class="right-column">
-    <div class="section customer-info">
-      <h2 class="section-title">THÔNG TIN KHÁCH HÀNG</h2>
-      <p class="section-subtitle">Hãy nhập chính xác thông tin liên hệ và nơi nhận hàng của bạn!</p>
-
-      <form>
-        <div class="input-group">
-          <input type="text" placeholder="Họ và tên" required>
-        </div>
-
-        <div class="input-group">
-          <input type="tel" placeholder="Số điện thoại" required>
-        </div>
-
-        <div class="input-group">
-          <input type="text" placeholder="Địa chỉ nhận hàng" required>
-        </div>
-
-        <div class="input-group">
-          <textarea rows="4" placeholder="Chiều cao, cân nặng, hoặc size bạn thường mặc ..."></textarea>
-        </div>
-
-        <button type="submit" class="place-order-button">ĐẶT HÀNG</button>
-      </form>
-    </div>
-  </div>
 </div>
 
+<!-- Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
 
+    function updateCartCount() {
+        fetch('/api/cart/count', { credentials: 'include' })
+            .then(response => response.json())
+            .then(count => {
+                updateCartBadge(count);
+            })
+            .catch(error => {
+                console.error('Error fetching cart count:', error);
+                updateCartBadge(0);
+            });
+    }
 
+    function updateCartBadge(count) {
+        const badges = document.querySelectorAll('.cart-badge');
+        badges.forEach(badge => {
+            if (badge) {
+                badge.textContent = count || 0;
+            }
+        });
+    }
 
+    function updateQuantity(cartItemId, newQuantity) {
+        if (newQuantity === 0) {
+            removeItem(cartItemId);
+            return;
+        }
+        fetch('/api/cart/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gioHangChiTietId: cartItemId, soLuong: newQuantity })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Lỗi khi cập nhật giỏ hàng:', error));
+    }
 
-
-<footer class="main-footer pt-5 pb-4">
-  <div class="container">
-    <div class="row text-center border-bottom pb-4 mb-5 text-white">
-      <div class="col-md-3 mb-3">
-        <i class="bi bi-truck fs-4 me-2"></i>
-        <p class="fw-bold mb-1">MIỄN PHÍ SHIP</p>
-        <p class="small text-muted">Toàn quốc</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <i class="bi bi-ticket-perforator fs-4 me-2"></i>
-        <p class="fw-bold mb-1">VOUCHER 20%</p>
-        <p class="small text-muted">Cho khách mới</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <i class="bi bi-shield-check fs-4 me-2"></i>
-        <p class="fw-bold mb-1">BẢO HÀNH</p>
-        <p class="small text-muted">365 ngày</p>
-      </div>
-      <div class="col-md-3 mb-3">
-        <i class="bi bi-geo-alt fs-4 me-2"></i>
-        <p class="fw-bold mb-1">ĐỊA CHỈ</p>
-        <p class="small text-muted">Cửa hàng PL Jacket VN</p>
-      </div>
-    </div>
-
-    <div class="row text-white">
-      <div class="col-md-2 col-6 mb-4">
-        <p class="fw-bold text-uppercase mb-3">Mua Sắm</p>
-        <ul class="list-unstyled footer-links">
-          <li><a href="#">Áo Thun</a></li>
-          <li><a href="#">Áo Khoác</a></li>
-          <li><a href="#">Áo Sơ Mi</a></li>
-          <li><a href="#">Quần Dài</a></li>
-          <li><a href="#">Quần Short</a></li>
-          <li><a href="#">SITEMAP</a></li>
-          <li><a href="#">VIP</a></li>
-        </ul>
-      </div>
-
-      <div class="col-md-3 col-6 mb-4">
-        <p class="fw-bold text-uppercase mb-3">Phân loại sản phẩm</p>
-        <ul class="list-unstyled footer-links">
-          <li class="fw-bold mb-1 mt-2">GU ĐƠN GIẢN</li>
-          <li><a href="#">Thời trang công sở</a></li>
-          <li><a href="#">Phong cách Basic</a></li>
-          <li class="fw-bold mb-1 mt-2">GU THIẾT KẾ</li>
-          <li><a href="#">Sản phẩm cao cấp</a></li>
-          <li><a href="#">Đồ cặp đôi</a></li>
-          <li class="fw-bold mb-1 mt-2">GU THỂ THAO</li>
-        </ul>
-      </div>
-
-      <div class="col-md-2 col-6 mb-4">
-        <p class="fw-bold text-uppercase mb-3">Về PL Jacket</p>
-        <ul class="list-unstyled footer-links">
-          <li><a href="#">Giới Thiệu</a></li>
-          <li><a href="#">Cửa Hàng</a></li>
-          <li><a href="#">Bảo Hành</a></li>
-          <li><a href="#">Đổi Trả</a></li>
-          <li><a href="#">Vận Chuyển</a></li>
-        </ul>
-      </div>
-
-      <div class="col-md-5 mb-4">
-        <p class="fw-bold text-uppercase mb-3">Gia nhập cộng đồng PLJacket</p>
-        <p class="text-muted small">
-          Nơi bạn tìm thấy cảm hứng thời trang và khám phá những món đồ đúng Gu của mình.
-        </p>
-        <div class="d-flex mb-3">
-          <input type="email" class="form-control me-2" placeholder="Nhập email của bạn" style="max-width: 250px;">
-          <button class="btn btn-secondary">Đăng ký</button>
-        </div>
-
-        <div class="social-icons mb-3">
-          <a href="#" class="text-white me-3"><i class="bi bi-facebook fs-5"></i></a>
-          <a href="#" class="text-white me-3"><i class="bi bi-youtube fs-5"></i></a>
-          <a href="#" class="text-white me-3"><i class="bi bi-tiktok fs-5"></i></a>
-          <a href="#" class="text-white"><i class="bi bi-instagram fs-5"></i></a>
-        </div>
-        <p class="fw-bold hashtag">#PLJacket #ThờiTrangTốiGiản</p>
-      </div>
-    </div>
-
-    <div class="row border-top pt-4 mt-4">
-      <div class="col-12 text-center text-muted small">
-        <p class="mb-1">Mã số ĐKKD: 0305193405-007 – Đăng ký lần đầu: 05/02/2024. Cơ quan cấp: UBND Quận 10 – Phòng Tài chính – Kế hoạch.</p>
-        <p class="mb-1">Địa chỉ: 766/28 Sư Vạn Hạnh (Nối dài), P. 12, Q. 10, TP. HCM. Điện thoại: (028) 7307 4441. Email: cskh@pljacket.com</p>
-        <p class="mt-3">© 2025 PL JACKET VN. ALL RIGHTS RESERVED.</p>
-      </div>
-    </div>
-  </div>
-</footer>
-
+    function removeItem(cartItemId) {
+        if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+            fetch(`/api/cart/remove/${cartItemId}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Lỗi khi xóa sản phẩm:', error));
+        }
+    }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

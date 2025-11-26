@@ -23,9 +23,6 @@ public class TrangThaiDonHang {
     @Column(name = "TenTrangThai", length = 255)
     private String tenTrangThai;
 
-    @Column(name = "MoTa")
-    private String moTa;
-
     @Column(name = "ThuTu")
     private Integer thuTu;
 

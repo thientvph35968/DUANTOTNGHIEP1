@@ -10,33 +10,27 @@ import java.util.List;
 @Repository
 public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
 
-    // ✅ Tìm sản phẩm còn hàng và đang hoạt động với đầy đủ quan hệ
+    // ✅ Tìm sản phẩm còn hàng và đang hoạt động với các quan hệ cần thiết
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
             "LEFT JOIN FETCH sp.thuongHieu " +
-            "LEFT JOIN FETCH sp.chiTietList ct " +
-            "LEFT JOIN FETCH ct.mauSac " +
-            "LEFT JOIN FETCH ct.kichThuoc " +
+            "LEFT JOIN FETCH sp.chiTietList " +
             "WHERE sp.trangThai = true")
     List<SanPham> findActiveProducts();
 
     // Tìm theo mã sản phẩm
     SanPham findByMaSanPham(String maSanPham);
 
-    // ✅ Tìm theo thương hiệu với đầy đủ quan hệ
+    // ✅ Tìm theo thương hiệu với các quan hệ cần thiết
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
             "LEFT JOIN FETCH sp.thuongHieu th " +
-            "LEFT JOIN FETCH sp.chiTietList ct " +
-            "LEFT JOIN FETCH ct.mauSac " +
-            "LEFT JOIN FETCH ct.kichThuoc " +
-            "WHERE th.idThuongHieu = :idThuongHieu AND sp.trangThai = true")
+            "LEFT JOIN FETCH sp.chiTietList " +
+            "WHERE th.id = :idThuongHieu AND sp.trangThai = true")
     List<SanPham> findByThuongHieu(@Param("idThuongHieu") Integer idThuongHieu);
 
-    // ✅ Tìm sản phẩm SALE với đầy đủ quan hệ
+    // ✅ Tìm sản phẩm SALE với các quan hệ cần thiết
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
             "LEFT JOIN FETCH sp.thuongHieu " +
-            "LEFT JOIN FETCH sp.chiTietList ct " +
-            "LEFT JOIN FETCH ct.mauSac " +
-            "LEFT JOIN FETCH ct.kichThuoc " +
+            "LEFT JOIN FETCH sp.chiTietList " +
             "WHERE sp.trangThai = true " +
             "ORDER BY sp.id DESC")
     List<SanPham> findSaleProducts();
@@ -44,11 +38,7 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
     // ✅ Tìm sản phẩm theo ID với ĐẦY ĐỦ thông tin chi tiết
     @Query("SELECT DISTINCT sp FROM SanPham sp " +
             "LEFT JOIN FETCH sp.thuongHieu " +
-            "LEFT JOIN FETCH sp.chiTietList ct " +
-            "LEFT JOIN FETCH ct.mauSac " +
-            "LEFT JOIN FETCH ct.kichThuoc " +
-            "LEFT JOIN FETCH ct.chatLieu " +
-            "LEFT JOIN FETCH ct.khoaAo " +
+            "LEFT JOIN FETCH sp.chiTietList " +
             "WHERE sp.id = :id")
     SanPham findByIdWithDetails(@Param("id") Integer id);
 }

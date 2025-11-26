@@ -44,7 +44,7 @@ public class KhachHangController {
 
     @GetMapping("/edit/{id}")
     @ResponseBody
-    public KhachHang getKhachHang(@PathVariable Long id) { // ✅ Đổi Integer → Long
+    public KhachHang getKhachHang(@PathVariable Integer id) {
         return khachHangService.getKhachHangById(id).orElse(null);
     }
 
@@ -60,7 +60,7 @@ public class KhachHangController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteKhachHang(@PathVariable Long id, RedirectAttributes redirectAttributes) { // ✅ Đổi Integer → Long
+    public String deleteKhachHang(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         try {
             khachHangService.deleteKhachHang(id);
             redirectAttributes.addFlashAttribute("success", "Xóa khách hàng thành công!");
@@ -76,7 +76,7 @@ public class KhachHangController {
             @RequestParam String maKhachHang,
             @RequestParam String email,
             @RequestParam String sdt,
-            @RequestParam(required = false) Long excludeId) {
+            @RequestParam(required = false) Integer excludeId) {
 
         boolean duplicateMa;
         boolean duplicateEmail;

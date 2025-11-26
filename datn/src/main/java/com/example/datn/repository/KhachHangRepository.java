@@ -7,10 +7,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface KhachHangRepository extends JpaRepository<KhachHang, Long> {
-    boolean existsByMaKhachHangAndIdNot(String maKhachHang, Long id);
-    boolean existsByEmailAndIdNot(String email, Long id);
-    boolean existsBySdtAndIdNot(String sdt, Long id);
+public interface KhachHangRepository extends JpaRepository<KhachHang, Integer> {
+    boolean existsByMaKhachHangAndIdNot(String maKhachHang, Integer id);
+    boolean existsByEmailAndIdNot(String email, Integer id);
+    boolean existsBySdtAndIdNot(String sdt, Integer id);
 
     boolean existsByMaKhachHang(String maKhachHang);
     boolean existsByEmail(String email);

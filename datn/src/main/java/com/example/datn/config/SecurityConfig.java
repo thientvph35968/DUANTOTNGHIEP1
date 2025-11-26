@@ -24,7 +24,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập public - SỬA LẠI THỨ TỰ
+                        // Cho phép truy cập public
                         .requestMatchers(
                                 "/", "/home",
                                 "/login", "/dangky", "/dangki",
@@ -37,7 +37,11 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()
-                        // Chỉ ADMIN mới truy cập được
+                        
+                        // Chỉ cần đăng nhập là vào được giỏ hàng, thanh toán, profile
+                        .requestMatchers("/giohang", "/checkout", "/profile/**").authenticated()
+
+                        // Chỉ ADMIN mới truy cập được các trang quản lý
                         .requestMatchers(
                                 "/admin/**",
                                 "/quanlynguoidung",
@@ -49,8 +53,7 @@ public class SecurityConfig {
                                 "/quanlymagiam",
                                 "/khachhang/**"
                         ).hasRole("ADMIN")
-                        // Yêu cầu đăng nhập cho các trang còn lại
-                        .requestMatchers("/profile/**", "/giohang").authenticated()
+                        
                         // Các request khác phải đăng nhập
                         .anyRequest().authenticated()
                 )

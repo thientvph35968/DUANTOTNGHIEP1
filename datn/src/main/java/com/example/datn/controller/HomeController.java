@@ -3,6 +3,7 @@ package com.example.datn.controller;
 import com.example.datn.dto.ProductDTO;
 import com.example.datn.entity.KhachHang;
 import com.example.datn.repository.KhachHangRepository;
+import com.example.datn.security.CustomUserDetails;
 import com.example.datn.service.SanPhamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -11,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,69 +21,56 @@ import java.util.Optional;
 @Controller
 public class HomeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+
     @Autowired
     private SanPhamService sanPhamService;
 
-    // Thay thế NhanVienRepository bằng KhachHangRepository
     @Autowired
-    private KhachHangRepository khachHangRepository; // Đảm bảo đã inject KhachHangRepository
+    private KhachHangRepository khachHangRepository;
 
-    // ✅ Method này tự động chạy trước mọi request để thêm thông tin user vào model
     @ModelAttribute
     public void addUserToModel(Model model, Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getName())) {
-
-            String username = authentication.getName();
-
-            // 1. Tìm kiếm KhachHang thay vì NhanVien
-            Optional<KhachHang> khachHangOpt = khachHangRepository.findByTaiKhoan(username);
-
-            if (khachHangOpt.isPresent()) {
-                KhachHang khachHang = khachHangOpt.get();
-
-                // 2. Thêm các thuộc tính của KhachHang vào Model
-                model.addAttribute("loggedInUser", khachHang.getTenKhachHang()); // Sử dụng TenKhachHang
-                model.addAttribute("username", username);
-                model.addAttribute("isAuthenticated", true);
-
-                // Thêm role để phân biệt USER nếu cần
-                if (khachHang.getVaiTro() != null) {
-                    model.addAttribute("userRole", khachHang.getVaiTro().getTenVaiTro());
-                }
-            } else {
-                // Tùy chọn: Xử lý nếu tài khoản được xác thực nhưng không tìm thấy trong bảng KhachHang
-                // (Ví dụ: Đây là tài khoản NhanVien/Admin, bạn sẽ cần logic kết hợp)
-                model.addAttribute("isAuthenticated", false);
+        // *** SỬA LỖI Ở ĐÂY: Thêm kiểm tra `instanceof` để tránh ClassCastException ***
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            KhachHang khachHang = userDetails.getKhachHang();
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("username", khachHang.getTaiKhoan());
+            model.addAttribute("loggedInUser", khachHang.getTenKhachHang());
+            if (khachHang.getVaiTro() != null) {
+                model.addAttribute("userRole", khachHang.getVaiTro().getTenVaiTro());
             }
         } else {
             model.addAttribute("isAuthenticated", false);
         }
     }
 
-    // Trang chủ
     @GetMapping({"/", "/home"})
     public String home(Model model) {
-        // Lấy sản phẩm SALE từ DB
         List<ProductDTO> saleProducts = sanPhamService.getSaleProducts();
         model.addAttribute("saleProducts", saleProducts);
         return "home";
     }
 
-    // Chi tiết sản phẩm
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable Integer id, Model model) {
+        logger.info("Đang truy cập trang chi tiết sản phẩm với ID: {}", id);
         try {
             ProductDTO product = sanPhamService.getProductDetail(id);
+            if (product == null) {
+                logger.warn("Không tìm thấy sản phẩm với ID: {}", id);
+                return "redirect:/";
+            }
             model.addAttribute("product", product);
             return "SanPhamChiTiet";
         } catch (Exception e) {
-            model.addAttribute("error", "Không tìm thấy sản phẩm");
+            logger.error("Lỗi khi lấy chi tiết sản phẩm với ID {}: {}", id, e.getMessage());
             return "redirect:/";
         }
     }
 
-    // Danh sách sản phẩm mới
+    // ... các phương thức khác giữ nguyên ...
     @GetMapping("/collections/new")
     public String newProducts(Model model) {
         List<ProductDTO> products = sanPhamService.getAllProducts();
@@ -89,7 +79,6 @@ public class HomeController {
         return "product-list";
     }
 
-    // Trang sản phẩm giảm giá
     @GetMapping("/collections/giamgia")
     public String saleProducts(Model model) {
         List<ProductDTO> products = sanPhamService.getSaleProducts();
@@ -98,10 +87,6 @@ public class HomeController {
         return "product-list";
     }
 
-    @GetMapping("/giohang")
-    public String giohang() {
-        return "giohang";
-    }
 
     @GetMapping("/admin")
     public String admin() {

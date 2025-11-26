@@ -19,7 +19,7 @@ public class KhachHangService {
         return khachHangRepository.findAll();
     }
 
-    public Optional<KhachHang> getKhachHangById(Long id) { // ✅ Đổi Integer → Long
+    public Optional<KhachHang> getKhachHangById(Integer id) {
         return khachHangRepository.findById(id);
     }
 
@@ -33,12 +33,11 @@ public class KhachHangService {
         return khachHangRepository.save(khachHang);
     }
 
-    public void deleteKhachHang(Long id) { // ✅ Đổi Integer → Long
+    public void deleteKhachHang(Integer id) {
         khachHangRepository.deleteById(id);
     }
 
     public boolean existsByEmail(String email) {
-        // ✅ Repository của bạn không có findByEmail(), nên dùng existsByEmail()
         return khachHangRepository.existsByEmail(email);
     }
 

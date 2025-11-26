@@ -17,7 +17,9 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(KhachHang khachHang) {
         this.khachHang = khachHang;
     }
-
+    public KhachHang getKhachHang() {
+        return khachHang;
+    }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 2. Lấy VaiTro từ KhachHang

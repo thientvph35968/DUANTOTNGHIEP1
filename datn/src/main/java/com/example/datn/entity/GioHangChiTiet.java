@@ -1,10 +1,8 @@
 package com.example.datn.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -12,26 +10,26 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class GioHangChiTiet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_GioHangChiTiet")
-    private Integer id;
+    private Integer idGioHangChiTiet;
 
-    @ManyToOne
-    @JoinColumn(name = "ID_GioHang")
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_GioHang", nullable = false)
     private GioHang gioHang;
 
-    @ManyToOne
-    @JoinColumn(name = "ID_SanPhamChiTiet")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_SanPhamChiTiet", nullable = false)
     private SanPhamChiTiet sanPhamChiTiet;
 
     @Column(name = "SoLuong")
     private Integer soLuong;
 
-    @Column(name = "GiaSanPham")
+    @Column(name = "GiaSanPham", precision = 18, scale = 2)
     private BigDecimal giaSanPham;
 
     @Column(name = "TenSanPham")

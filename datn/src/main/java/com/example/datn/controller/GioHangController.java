@@ -1,166 +1,182 @@
 package com.example.datn.controller;
 
-import com.example.datn.dto.*;
+import com.example.datn.dto.AddToCartRequest;
+import com.example.datn.dto.CartItemDTO;
+import com.example.datn.dto.CartResponse;
+import com.example.datn.dto.CheckoutFormDTO;
+import com.example.datn.dto.UpdateCartRequest;
 import com.example.datn.entity.KhachHang;
 import com.example.datn.repository.KhachHangRepository;
 import com.example.datn.service.GioHangService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.datn.security.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/cart")
+@Controller
+@RequiredArgsConstructor
 public class GioHangController {
 
-    @Autowired
-    private GioHangService gioHangService;
+    private final GioHangService gioHangService;
+    private final KhachHangRepository khachHangRepository;
+    private static final Logger logger = LoggerFactory.getLogger(GioHangController.class);
 
-    @Autowired
-    private KhachHangRepository khachHangRepository;
+    @ModelAttribute
+    public void addUserToModel(Model model, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            KhachHang khachHang = userDetails.getKhachHang();
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("username", khachHang.getTaiKhoan());
+            model.addAttribute("loggedInUser", khachHang.getTenKhachHang());
+        } else {
+            model.addAttribute("isAuthenticated", false);
+        }
+    }
 
-    /**
-     * Lấy ID khách hàng từ user đang đăng nhập
-     */
-    private Optional<Integer> getCurrentKhachHangId() {
+    private String formatCurrency(BigDecimal amount) {
+        if (amount == null) return "0₫";
+        NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        return formatter.format(amount) + "₫";
+    }
+
+    private KhachHang getCurrentKhachHang() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
-            return Optional.empty();
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
+            return ((CustomUserDetails) auth.getPrincipal()).getKhachHang();
         }
-
-        String username = auth.getName();
-        Optional<KhachHang> khachHangOpt = khachHangRepository.findByTaiKhoan(username);
-
-        return khachHangOpt.map(KhachHang::getId);
+        return null;
     }
 
-    /**
-     * API: Lấy giỏ hàng hiện tại
-     */
-    @GetMapping
-    public ResponseEntity<ApiResponse<GioHangDTO>> getCart() {
-        try {
-            Optional<Integer> khachHangIdOpt = getCurrentKhachHangId();
-            if (khachHangIdOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Vui lòng đăng nhập"));
-            }
-
-            GioHangDTO cart = gioHangService.getCart(khachHangIdOpt.get());
-            return ResponseEntity.ok(ApiResponse.success("Lấy giỏ hàng thành công", cart));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+    @GetMapping("/api/cart/count")
+    @ResponseBody
+    public ResponseEntity<Integer> getCartItemCount() {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return ResponseEntity.ok(0);
         }
+        Integer count = gioHangService.getCartItemCount(khachHang.getId());
+        return ResponseEntity.ok(count);
     }
 
-    /**
-     * API: Thêm sản phẩm vào giỏ
-     */
-    @PostMapping("/add")
-    public ResponseEntity<ApiResponse<GioHangDTO>> addToCart(@RequestBody AddToCartRequest request) {
-        try {
-            Optional<Integer> khachHangIdOpt = getCurrentKhachHangId();
-            if (khachHangIdOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng."));
-            }
-
-            ApiResponse<GioHangDTO> response = gioHangService.addToCart(khachHangIdOpt.get(), request);
-
-            if (response.getSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+    @PostMapping("/api/cart/add")
+    @ResponseBody
+    public ResponseEntity<CartResponse> addToCart(@RequestBody AddToCartRequest request) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(CartResponse.builder().success(false).message("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng").build());
         }
+        CartResponse response = gioHangService.addToCart(khachHang.getId(), request);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * API: Cập nhật số lượng
-     */
-    @PutMapping("/update")
-    public ResponseEntity<ApiResponse<GioHangDTO>> updateCart(@RequestBody UpdateCartRequest request) {
-        try {
-            Optional<Integer> khachHangIdOpt = getCurrentKhachHangId();
-            if (khachHangIdOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Vui lòng đăng nhập"));
-            }
-
-            ApiResponse<GioHangDTO> response = gioHangService.updateCart(khachHangIdOpt.get(), request);
-
-            if (response.getSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+    @GetMapping("/giohang")
+    public String showGioHang(Model model) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return "redirect:/login";
         }
+
+        List<CartItemDTO> cartItems = gioHangService.getCartItems(khachHang.getId());
+        BigDecimal totalAmount = cartItems.stream()
+                .map(item -> new BigDecimal(item.getTongTien().replaceAll("[^\\d]", "")))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("userPhone", khachHang.getSdt());
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("grandTotal", formatCurrency(totalAmount));
+
+        return "giohang";
     }
 
-    /**
-     * API: Xóa sản phẩm khỏi giỏ
-     */
-    @DeleteMapping("/remove/{id}")
-    public ResponseEntity<ApiResponse<GioHangDTO>> removeFromCart(@PathVariable Integer id) {
+    @GetMapping("/checkout")
+    public String checkout(Model model) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return "redirect:/login";
+        }
+
+        List<CartItemDTO> cartItems = gioHangService.getCartItems(khachHang.getId());
+        if (cartItems.isEmpty()) {
+            return "redirect:/giohang";
+        }
+
+        BigDecimal totalAmount = cartItems.stream()
+                .map(item -> new BigDecimal(item.getTongTien().replaceAll("[^\\d]", "")))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Tạo và điền sẵn DTO cho form
+        CheckoutFormDTO checkoutForm = new CheckoutFormDTO();
+        checkoutForm.setTenNguoiNhan(khachHang.getTenKhachHang());
+        checkoutForm.setSdtNhanHang(khachHang.getSdt());
+        checkoutForm.setEmailNhanHang(khachHang.getEmail());
+        model.addAttribute("checkoutForm", checkoutForm);
+        
+        model.addAttribute("khachHang", khachHang);
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("subTotal", totalAmount);
+        model.addAttribute("formattedSubTotal", formatCurrency(totalAmount));
+
+        return "checkout";
+    }
+
+    @PostMapping("/place-order")
+    public String placeOrder(@ModelAttribute("checkoutForm") CheckoutFormDTO checkoutForm,
+                             RedirectAttributes redirectAttributes) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return "redirect:/login";
+        }
+
         try {
-            Optional<Integer> khachHangIdOpt = getCurrentKhachHangId();
-            if (khachHangIdOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Vui lòng đăng nhập"));
-            }
-
-            ApiResponse<GioHangDTO> response = gioHangService.removeFromCart(khachHangIdOpt.get(), id);
-
-            if (response.getSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
+            gioHangService.placeOrder(khachHang, checkoutForm);
+            redirectAttributes.addFlashAttribute("orderSuccess", "Đặt hàng thành công! Cảm ơn bạn đã mua sắm.");
+            return "redirect:/";
+        } catch (IllegalStateException e) {
+            logger.error("Lỗi khi đặt hàng (dữ liệu không hợp lệ): {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("orderError", e.getMessage());
+            return "redirect:/checkout";
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+            logger.error("Lỗi không mong muốn khi đặt hàng: ", e);
+            redirectAttributes.addFlashAttribute("orderError", "Đã có lỗi hệ thống xảy ra. Vui lòng thử lại sau.");
+            return "redirect:/checkout";
         }
     }
 
-    /**
-     * API: Xóa toàn bộ giỏ hàng
-     */
-    @DeleteMapping("/clear")
-    public ResponseEntity<ApiResponse<Void>> clearCart() {
-        try {
-            Optional<Integer> khachHangIdOpt = getCurrentKhachHangId();
-            if (khachHangIdOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Vui lòng đăng nhập"));
-            }
-
-            ApiResponse<Void> response = gioHangService.clearCart(khachHangIdOpt.get());
-
-            if (response.getSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Lỗi server: " + e.getMessage()));
+    @PutMapping("/api/cart/update")
+    @ResponseBody
+    public ResponseEntity<CartResponse> updateQuantity(@RequestBody UpdateCartRequest request) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(CartResponse.builder().success(false).message("Vui lòng đăng nhập").build());
         }
+        CartResponse response = gioHangService.updateQuantity(request.getGioHangChiTietId(), request.getSoLuong());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/api/cart/remove/{id}")
+    @ResponseBody
+    public ResponseEntity<CartResponse> removeFromCart(@PathVariable Integer id) {
+        KhachHang khachHang = getCurrentKhachHang();
+        if (khachHang == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(CartResponse.builder().success(false).message("Vui lòng đăng nhập").build());
+        }
+        CartResponse response = gioHangService.removeFromCart(id);
+        return ResponseEntity.ok(response);
     }
 }

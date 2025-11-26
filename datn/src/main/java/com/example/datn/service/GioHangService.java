@@ -1,136 +1,193 @@
 package com.example.datn.service;
 
-import com.example.datn.dto.*;
+import com.example.datn.dto.AddToCartRequest;
+import com.example.datn.dto.CartItemDTO;
+import com.example.datn.dto.CartResponse;
+import com.example.datn.dto.CheckoutFormDTO;
 import com.example.datn.entity.*;
 import com.example.datn.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class GioHangService {
 
-    @Autowired
-    private GioHangRepository gioHangRepository;
+    private final GioHangRepository gioHangRepository;
+    private final GioHangChiTietRepository gioHangChiTietRepository;
+    private final KhachHangRepository khachHangRepository;
+    private final SanPhamChiTietRepository sanPhamChiTietRepository;
+    private final HoaDonRepository hoaDonRepository;
+    private final HoaDonChiTietRepository hoaDonChiTietRepository;
+    private final TrangThaiDonHangRepository trangThaiDonHangRepository;
+    private final PhuongThucThanhToanRepository phuongThucThanhToanRepository;
+    private final DiaChiGiaoHangRepository diaChiGiaoHangRepository;
 
-    @Autowired
-    private GioHangChiTietRepository gioHangChiTietRepository;
+    private String formatCurrency(BigDecimal amount) {
+        if (amount == null) return "0₫";
+        NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        return formatter.format(amount) + "₫";
+    }
 
-    @Autowired
-    private KhachHangRepository khachHangRepository;
+    @Transactional
+    public void placeOrder(KhachHang khachHang, CheckoutFormDTO form) {
+        GioHang gioHang = gioHangRepository.findByKhachHangAndTrangThai(khachHang, true)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy giỏ hàng để đặt hàng."));
 
-    @Autowired
-    private SanPhamChiTietRepository sanPhamChiTietRepository;
+        List<GioHangChiTiet> cartItems = gioHangChiTietRepository.findByGioHangAndFetchDetails(gioHang);
+        if (cartItems.isEmpty()) {
+            throw new IllegalStateException("Giỏ hàng trống.");
+        }
 
-    /**
-     * Lấy giỏ hàng của khách hàng
-     */
-    public GioHangDTO getCart(Integer khachHangId) {
+        // 1. Tạo và lưu địa chỉ giao hàng
+        DiaChiGiaoHang diaChi = new DiaChiGiaoHang();
+        String diaChiDayDu = String.join(", ", form.getDiaChiChiTiet(), form.getPhuongXa(), form.getQuanHuyen(), form.getTinhThanh());
+        diaChi.setDiaChi(diaChiDayDu);
+        diaChi.setKhachHang(khachHang);
+        diaChiGiaoHangRepository.save(diaChi);
+
+        // 2. Tìm phương thức thanh toán (An toàn hơn bằng cách giả định ID)
+        // Giả sử COD có ID=1, QR có ID=2. Thay đổi nếu cần.
+        int ptttId = "COD".equals(form.getPaymentMethod()) ? 1 : 2; 
+        PhuongThucThanhToan pttt = phuongThucThanhToanRepository.findById(ptttId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phương thức thanh toán với ID: " + ptttId));
+
+        // 3. Tìm trạng thái đơn hàng
+        TrangThaiDonHang trangThaiChoXacNhan = trangThaiDonHangRepository.findById(1)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái đơn hàng mặc định."));
+
+        // 4. Tạo Hóa Đơn
+        HoaDon hoaDon = new HoaDon();
+        hoaDon.setMaHoaDon("HD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        hoaDon.setKhachHang(khachHang);
+        hoaDon.setNgayTao(LocalDate.now());
+        hoaDon.setPhuongThucThanhToan(pttt);
+        hoaDon.setTrangThaiDonHang(trangThaiChoXacNhan);
+        hoaDon.setDiaChiGiaoHang(diaChi);
+        
+        BigDecimal tongTien = BigDecimal.ZERO;
+        
+        // Lưu hóa đơn để lấy ID
+        HoaDon savedHoaDon = hoaDonRepository.save(hoaDon);
+
+        // 5. Tạo chi tiết hóa đơn và cập nhật kho
+        for (GioHangChiTiet cartItem : cartItems) {
+            SanPhamChiTiet spct = cartItem.getSanPhamChiTiet();
+            int soLuongMua = cartItem.getSoLuong();
+
+            if (spct.getSoLuong() < soLuongMua) {
+                throw new IllegalStateException("Sản phẩm '" + spct.getSanPham().getTenSanPham() + "' không đủ số lượng trong kho.");
+            }
+
+            spct.setSoLuong(spct.getSoLuong() - soLuongMua);
+            sanPhamChiTietRepository.save(spct);
+
+            HoaDonChiTiet hdct = new HoaDonChiTiet();
+            hdct.setHoaDon(savedHoaDon);
+            hdct.setSanPhamChiTiet(spct);
+            hdct.setSoLuong(soLuongMua);
+            hdct.setDonGia(cartItem.getGiaSanPham());
+            hoaDonChiTietRepository.save(hdct);
+
+            tongTien = tongTien.add(cartItem.getGiaSanPham().multiply(BigDecimal.valueOf(soLuongMua)));
+        }
+        
+        // Cập nhật lại tổng tiền cho hóa đơn và lưu lại
+        savedHoaDon.setTongTien(tongTien);
+        hoaDonRepository.save(savedHoaDon);
+
+        // 6. Xóa giỏ hàng
+        gioHangChiTietRepository.deleteAll(cartItems);
+    }
+    
+    // --- CÁC PHƯƠNG THỨC KHÁC ---
+
+    @Transactional(readOnly = true)
+    public List<CartItemDTO> getCartItems(Long idKhachHang) {
+        List<CartItemDTO> cartItems = new ArrayList<>();
         try {
-            Optional<GioHang> gioHangOpt = gioHangRepository.findByKhachHangIdWithDetails(khachHangId);
+            KhachHang kh = khachHangRepository.findById(Math.toIntExact(idKhachHang))
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
 
-            if (gioHangOpt.isEmpty()) {
-                return new GioHangDTO(null, khachHangId, new ArrayList<>(), BigDecimal.ZERO, 0);
+            Optional<GioHang> gioHangOpt = gioHangRepository.findByKhachHangAndTrangThai(kh, true);
+
+            if (gioHangOpt.isPresent()) {
+                List<GioHangChiTiet> items = gioHangChiTietRepository.findByGioHangAndFetchDetails(gioHangOpt.get());
+                for (GioHangChiTiet item : items) {
+                    CartItemDTO dto = CartItemDTO.builder()
+                            .idGioHangChiTiet(item.getIdGioHangChiTiet())
+                            .idSanPhamChiTiet(item.getSanPhamChiTiet().getId())
+                            .tenSanPham(item.getTenSanPham())
+                            .hinhAnh(item.getSanPhamChiTiet().getSanPham().getHinhAnh())
+                            .soLuong(item.getSoLuong())
+                            .soLuongTon(item.getSanPhamChiTiet().getSoLuong())
+                            .giaSanPham(formatCurrency(item.getGiaSanPham()))
+                            .tongTien(formatCurrency(item.getGiaSanPham().multiply(BigDecimal.valueOf(item.getSoLuong()))))
+                            .build();
+                    cartItems.add(dto);
+                }
             }
-
-            GioHang gioHang = gioHangOpt.get();
-            List<GioHangItemDTO> items = new ArrayList<>();
-            BigDecimal tongTien = BigDecimal.ZERO;
-            int tongSoLuong = 0;
-
-            for (GioHangChiTiet ct : gioHang.getChiTiet()) {
-
-                // Lấy thông tin sản phẩm chi tiết flat, tránh lazy
-                SanPhamChiTiet spct = ct.getSanPhamChiTiet();
-                SanPham sp = spct.getSanPham();
-
-                String tenSanPham = sp != null ? sp.getTenSanPham() : "Không xác định";
-                String hinhAnh = sp != null ? sp.getHinhAnh() : null;
-                String mauSac = spct.getMauSac() != null ? spct.getMauSac().getTenMauSac() : null;
-                String kichThuoc = spct.getKichThuoc() != null ? spct.getKichThuoc().getTenKichThuoc() : null;
-
-                BigDecimal thanhTien = ct.getGiaSanPham().multiply(BigDecimal.valueOf(ct.getSoLuong()));
-
-                GioHangItemDTO item = new GioHangItemDTO(
-                        ct.getId(),
-                        spct.getId(),
-                        sp != null ? sp.getId() : null,
-                        tenSanPham,
-                        hinhAnh,
-                        mauSac,
-                        kichThuoc,
-                        ct.getSoLuong(),
-                        ct.getGiaSanPham(),
-                        thanhTien,
-                        spct.getSoLuong()
-                );
-
-                items.add(item);
-                tongTien = tongTien.add(thanhTien);
-                tongSoLuong += ct.getSoLuong();
-            }
-
-            return new GioHangDTO(gioHang.getId(), khachHangId, items, tongTien, tongSoLuong);
-
         } catch (Exception e) {
             e.printStackTrace();
-            return new GioHangDTO(null, khachHangId, new ArrayList<>(), BigDecimal.ZERO, 0);
+        }
+        return cartItems;
+    }
+    
+    @Transactional(readOnly = true)
+    public Integer getCartItemCount(Long idKhachHang) {
+        try {
+            return khachHangRepository.findById(Math.toIntExact(idKhachHang))
+                    .flatMap(kh -> gioHangRepository.findByKhachHangAndTrangThai(kh, true))
+                    .map(gioHang -> gioHangChiTietRepository.countTotalQuantityByGioHangId(gioHang.getIdGioHang()))
+                    .orElse(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 
-    /**
-     * Thêm sản phẩm vào giỏ hàng
-     */
-    public ApiResponse<GioHangDTO> addToCart(Integer khachHangId, AddToCartRequest request) {
+    @Transactional
+    public CartResponse addToCart(Long idKhachHang, AddToCartRequest request) {
         try {
-            if (khachHangId == null || request == null) {
-                return ApiResponse.error("Dữ liệu không hợp lệ");
+            KhachHang khachHang = khachHangRepository.findById(Math.toIntExact(idKhachHang))
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+
+            SanPhamChiTiet spct = sanPhamChiTietRepository.findById(request.getSanPhamChiTietId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
+            if (spct.getSoLuong() == null || spct.getSoLuong() < request.getSoLuong()) {
+                return CartResponse.builder().success(false).message("Số lượng sản phẩm không đủ trong kho!").build();
             }
 
-            Optional<KhachHang> khachHangOpt = khachHangRepository.findById(Long.valueOf(khachHangId));
-            if (khachHangOpt.isEmpty()) {
-                return ApiResponse.error("Không tìm thấy khách hàng");
-            }
-
-            Optional<SanPhamChiTiet> spctOpt = sanPhamChiTietRepository.findById(request.getSanPhamChiTietId());
-            if (spctOpt.isEmpty()) {
-                return ApiResponse.error("Không tìm thấy sản phẩm");
-            }
-
-            SanPhamChiTiet spct = spctOpt.get();
-
-            if (spct.getSoLuong() < request.getSoLuong()) {
-                return ApiResponse.error("Sản phẩm chỉ còn " + spct.getSoLuong() + " sản phẩm");
-            }
-
-            // Lấy hoặc tạo giỏ hàng
-            GioHang gioHang = gioHangRepository.findByKhachHangIdAndTrangThai(khachHangId, true)
+            GioHang gioHang = gioHangRepository.findByKhachHangAndTrangThai(khachHang, true)
                     .orElseGet(() -> {
-                        GioHang gh = new GioHang();
-                        gh.setKhachHang(khachHangOpt.get());
-                        return gioHangRepository.save(gh);
+                        GioHang newGioHang = new GioHang();
+                        newGioHang.setKhachHang(khachHang);
+                        newGioHang.setNgayTao(LocalDate.now());
+                        newGioHang.setTrangThai(true);
+                        return gioHangRepository.save(newGioHang);
                     });
 
-            // Kiểm tra sản phẩm đã có trong giỏ chưa
-            Optional<GioHangChiTiet> existingItemOpt = gioHangChiTietRepository
-                    .findByGioHangIdAndSanPhamChiTietId(gioHang.getId(), request.getSanPhamChiTietId());
+            Optional<GioHangChiTiet> existingItem = gioHangChiTietRepository.findByGioHangAndSanPhamChiTiet(gioHang, spct);
 
-            if (existingItemOpt.isPresent()) {
-                GioHangChiTiet existingItem = existingItemOpt.get();
-                int newQuantity = existingItem.getSoLuong() + request.getSoLuong();
-
-                if (spct.getSoLuong() < newQuantity) {
-                    return ApiResponse.error("Vượt quá số lượng tồn kho");
+            if (existingItem.isPresent()) {
+                GioHangChiTiet item = existingItem.get();
+                int newQuantity = item.getSoLuong() + request.getSoLuong();
+                if (newQuantity > spct.getSoLuong()) {
+                    return CartResponse.builder().success(false).message("Số lượng vượt quá tồn kho!").build();
                 }
-
-                existingItem.setSoLuong(newQuantity);
-                gioHangChiTietRepository.save(existingItem);
+                item.setSoLuong(newQuantity);
+                gioHangChiTietRepository.save(item);
             } else {
                 GioHangChiTiet newItem = new GioHangChiTiet();
                 newItem.setGioHang(gioHang);
@@ -141,85 +198,45 @@ public class GioHangService {
                 gioHangChiTietRepository.save(newItem);
             }
 
-            GioHangDTO cartDTO = getCart(khachHangId);
-            return ApiResponse.success("Đã thêm vào giỏ hàng", cartDTO);
+            Integer itemCount = gioHangChiTietRepository.countTotalQuantityByGioHangId(gioHang.getIdGioHang());
+            return CartResponse.builder().success(true).message("Đã thêm sản phẩm vào giỏ hàng!").cartItemCount(itemCount != null ? itemCount : 0).build();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return ApiResponse.error("Lỗi server: " + e.getMessage());
+            return CartResponse.builder().success(false).message("Có lỗi: " + e.getMessage()).build();
         }
     }
-
-    /**
-     * Cập nhật số lượng trong giỏ
-     */
-    public ApiResponse<GioHangDTO> updateCart(Integer khachHangId, UpdateCartRequest request) {
+    
+    @Transactional
+    public CartResponse updateQuantity(Integer idGioHangChiTiet, Integer soLuong) {
         try {
-            if (khachHangId == null || request == null) {
-                return ApiResponse.error("Dữ liệu không hợp lệ");
+            GioHangChiTiet item = gioHangChiTietRepository.findById(idGioHangChiTiet)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng"));
+
+            if (soLuong <= 0) {
+                gioHangChiTietRepository.delete(item);
+                return CartResponse.builder().success(true).message("Đã xóa sản phẩm khỏi giỏ hàng").build();
             }
 
-            Optional<GioHangChiTiet> itemOpt = gioHangChiTietRepository.findById(request.getGioHangChiTietId());
-            if (itemOpt.isEmpty()) {
-                return ApiResponse.error("Không tìm thấy sản phẩm trong giỏ");
+            if (soLuong > item.getSanPhamChiTiet().getSoLuong()) {
+                return CartResponse.builder().success(false).message("Số lượng vượt quá tồn kho!").build();
             }
 
-            GioHangChiTiet item = itemOpt.get();
-            if (item.getSanPhamChiTiet().getSoLuong() < request.getSoLuong()) {
-                return ApiResponse.error("Sản phẩm chỉ còn " + item.getSanPhamChiTiet().getSoLuong());
-            }
-
-            item.setSoLuong(request.getSoLuong());
+            item.setSoLuong(soLuong);
             gioHangChiTietRepository.save(item);
-
-            GioHangDTO cartDTO = getCart(khachHangId);
-            return ApiResponse.success("Đã cập nhật giỏ hàng", cartDTO);
+            return CartResponse.builder().success(true).message("Đã cập nhật số lượng").build();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return ApiResponse.error("Lỗi server: " + e.getMessage());
+            return CartResponse.builder().success(false).message("Có lỗi: " + e.getMessage()).build();
         }
     }
 
-    /**
-     * Xóa sản phẩm khỏi giỏ
-     */
-    public ApiResponse<GioHangDTO> removeFromCart(Integer khachHangId, Integer gioHangChiTietId) {
+    @Transactional
+    public CartResponse removeFromCart(Integer idGioHangChiTiet) {
         try {
-            if (khachHangId == null || gioHangChiTietId == null) {
-                return ApiResponse.error("Dữ liệu không hợp lệ");
-            }
-
-            gioHangChiTietRepository.deleteById(gioHangChiTietId);
-
-            GioHangDTO cartDTO = getCart(khachHangId);
-            return ApiResponse.success("Đã xóa sản phẩm", cartDTO);
-
+            gioHangChiTietRepository.deleteById(idGioHangChiTiet);
+            return CartResponse.builder().success(true).message("Đã xóa sản phẩm khỏi giỏ hàng").build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return ApiResponse.error("Lỗi server: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Xóa toàn bộ giỏ hàng
-     */
-    public ApiResponse<Void> clearCart(Integer khachHangId) {
-        try {
-            if (khachHangId == null) {
-                return ApiResponse.error("Dữ liệu không hợp lệ");
-            }
-
-            Optional<GioHang> gioHangOpt = gioHangRepository.findByKhachHangIdAndTrangThai(khachHangId, true);
-            if (gioHangOpt.isPresent()) {
-                gioHangChiTietRepository.deleteByGioHangId(gioHangOpt.get().getId());
-            }
-
-            return ApiResponse.success("Đã xóa giỏ hàng", null);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ApiResponse.error("Lỗi server: " + e.getMessage());
+            return CartResponse.builder().success(false).message("Có lỗi: " + e.getMessage()).build();
         }
     }
 }

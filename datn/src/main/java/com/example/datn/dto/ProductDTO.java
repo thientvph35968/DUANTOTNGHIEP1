@@ -11,7 +11,8 @@ import java.util.Locale;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductDTO {
-    private Integer id;
+    private Integer id; // ID của SanPham
+    private Integer sanPhamChiTietId; // ID của SanPhamChiTiet
     private String maSanPham;
     private String tenSanPham;
     private String moTa;
@@ -47,7 +48,7 @@ public class ProductDTO {
     // Format giá tiền kiểu VN
     public String getFormattedPrice() {
         NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
-        return formatter.format(donGia) + "₫";
+        return formatter.format(donGia);
     }
 
     public String getFormattedSalePrice() {

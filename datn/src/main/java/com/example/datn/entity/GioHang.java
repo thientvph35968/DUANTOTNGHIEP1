@@ -1,23 +1,29 @@
 package com.example.datn.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "GioHang")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "GioHang")
 public class GioHang {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_GioHang")
-    private Integer id;
+    private Integer idGioHang;
 
     @ManyToOne
-    @JoinColumn(name = "ID_KhachHang")
+    @JoinColumn(name = "ID_KhachHang", nullable = false)
     private KhachHang khachHang;
 
     @Column(name = "NgayTao")
@@ -26,17 +32,6 @@ public class GioHang {
     @Column(name = "TrangThai")
     private Boolean trangThai;
 
-    @OneToMany(mappedBy = "gioHang", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<GioHangChiTiet> chiTiet;
-
-    @PrePersist
-    public void prePersist() {
-        if (ngayTao == null) {
-            ngayTao = LocalDate.now();
-        }
-        if (trangThai == null) {
-            trangThai = true;
-        }
-    }
+    @OneToMany(mappedBy = "gioHang", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<GioHangChiTiet> gioHangChiTiets;
 }

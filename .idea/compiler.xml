@@ -10,9 +10,6 @@
         <module name="datn" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="datn" target="17" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
